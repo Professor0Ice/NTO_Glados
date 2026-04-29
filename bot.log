@@ -1,0 +1,102 @@
+2026-04-29 19:51:16,501 - database - INFO - База данных готова
+2026-04-29 19:51:16,867 - __main__ - INFO - Канал: тгк рки - тест (ID=-1003816060153)
+2026-04-29 19:51:16,953 - __main__ - INFO - Чат: тгк_рки_чат_тест (ID=-1003970628139)
+2026-04-29 19:51:16,956 - chat_reader - INFO - Загружено 2202 запрещённых слов
+2026-04-29 19:51:16,956 - chat_reader - INFO - Загружено patterns_hard.txt
+2026-04-29 19:51:16,956 - chat_reader - INFO - Загружено patterns_soft.txt
+2026-04-29 19:51:16,957 - __main__ - INFO - Бот запущен
+2026-04-29 19:51:16,957 - aiogram.dispatcher - INFO - Start polling
+2026-04-29 19:51:17,020 - aiogram.dispatcher - INFO - Run polling for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
+2026-04-29 19:51:39,690 - chat_reader - INFO - Сообщение: user=Дима Исаев | Кружок | текст=''
+2026-04-29 19:51:40,104 - aiogram.event - INFO - Update id=257542087 is handled. Duration 415 ms by bot id=8423450313
+2026-04-29 19:51:46,657 - chat_reader - INFO - Сообщение: user=Дима Исаев | ContentType.TEXT | текст='р'
+2026-04-29 19:51:46,876 - aiogram.event - INFO - Update id=257542088 is handled. Duration 219 ms by bot id=8423450313
+2026-04-29 19:51:46,952 - chat_reader - INFO - Сообщение: user=Дима Исаев | ContentType.TEXT | текст='р'
+2026-04-29 19:51:47,165 - aiogram.event - INFO - Update id=257542089 is handled. Duration 214 ms by bot id=8423450313
+2026-04-29 19:51:48,148 - chat_reader - INFO - Сообщение: user=Дима Исаев | ContentType.TEXT | текст='раа'
+2026-04-29 19:51:48,260 - database - INFO - Пользователь CMEPTI_NET стал проверенным
+2026-04-29 19:51:48,260 - chat_reader - INFO - Пользователь Дима Исаев теперь проверенный
+2026-04-29 19:51:48,372 - aiogram.event - INFO - Update id=257542090 is handled. Duration 224 ms by bot id=8423450313
+2026-04-29 19:51:48,644 - chat_reader - INFO - Сообщение: user=Дима Исаев | ContentType.TEXT | текст='п'
+2026-04-29 19:51:48,878 - aiogram.event - INFO - Update id=257542091 is handled. Duration 234 ms by bot id=8423450313
+2026-04-29 19:51:58,200 - chat_reader - INFO - Сообщение: user=Дима Исаев | Кружок | текст=''
+2026-04-29 19:51:58,378 - aiogram.event - INFO - Update id=257542092 is handled. Duration 177 ms by bot id=8423450313
+2026-04-29 19:52:17,168 - aiogram.dispatcher - INFO - Polling stopped
+2026-04-29 19:52:17,169 - aiogram.dispatcher - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-04-29 19:52:17,169 - aiogram.dispatcher - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8423450313)
+2026-04-29 19:52:17,425 - aiogram.dispatcher - INFO - Polling stopped for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
+2026-04-29 20:04:22,600 - database - INFO - База данных готова
+2026-04-29 20:05:19,444 - database - INFO - База данных готова
+2026-04-29 20:07:19,065 - database - INFO - База данных готова
+2026-04-29 20:07:19,460 - __main__ - INFO - Канал: тгк рки - тест (ID=-1003816060153)
+2026-04-29 20:07:19,639 - __main__ - INFO - Чат: тгк_рки_чат_тест (ID=-1003970628139)
+2026-04-29 20:07:19,643 - chat_reader - INFO - Загружено 2202 запрещённых слов
+2026-04-29 20:07:19,643 - chat_reader - INFO - Загружено patterns_hard.txt
+2026-04-29 20:07:19,643 - chat_reader - INFO - Загружено patterns_soft.txt
+2026-04-29 20:07:19,643 - __main__ - INFO - Бот запущен
+2026-04-29 20:07:19,644 - aiogram.dispatcher - INFO - Start polling
+2026-04-29 20:07:19,689 - aiogram.dispatcher - INFO - Run polling for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
+2026-04-29 20:07:35,399 - aiogram.event - INFO - Update id=257542093 is handled. Duration 296 ms by bot id=8423450313
+2026-04-29 20:07:49,303 - aiogram.dispatcher - INFO - Polling stopped
+2026-04-29 20:07:49,304 - aiogram.dispatcher - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-04-29 20:07:49,304 - aiogram.dispatcher - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8423450313)
+2026-04-29 20:07:49,564 - aiogram.dispatcher - INFO - Polling stopped for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
+2026-04-29 20:37:12,621 - database - INFO - База данных готова
+2026-04-29 20:37:13,000 - __main__ - INFO - Канал: тгк рки - тест (ID=-1003816060153)
+2026-04-29 20:37:13,107 - __main__ - INFO - Чат: test (ID=-1003321987793)
+2026-04-29 20:37:13,109 - chat_reader - INFO - Загружено 2202 запрещённых слов
+2026-04-29 20:37:13,110 - chat_reader - INFO - Загружено patterns_hard.txt
+2026-04-29 20:37:13,110 - chat_reader - INFO - Загружено patterns_soft.txt
+2026-04-29 20:37:13,110 - __main__ - INFO - Бот запущен
+2026-04-29 20:37:13,111 - aiogram.dispatcher - INFO - Start polling
+2026-04-29 20:37:13,155 - aiogram.dispatcher - INFO - Run polling for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
+2026-04-29 20:37:13,221 - aiogram.event - INFO - Update id=257542096 is handled. Duration 0 ms by bot id=8423450313
+2026-04-29 20:37:13,380 - aiogram.event - INFO - Update id=257542094 is handled. Duration 160 ms by bot id=8423450313
+2026-04-29 20:37:13,511 - aiogram.event - INFO - Update id=257542095 is handled. Duration 290 ms by bot id=8423450313
+2026-04-29 20:37:21,812 - chat_reader - INFO - Сообщение: user=Матвей Б... | ContentType.TEXT | текст='jjj'
+2026-04-29 20:37:21,812 - aiogram.event - INFO - Update id=257542097 is handled. Duration 0 ms by bot id=8423450313
+2026-04-29 20:37:41,369 - forwarder - INFO - Переслан пост из канала: 34
+2026-04-29 20:37:41,369 - aiogram.event - INFO - Update id=257542098 is handled. Duration 145 ms by bot id=8423450313
+2026-04-29 20:38:08,106 - aiogram.dispatcher - INFO - Polling stopped
+2026-04-29 20:38:08,107 - aiogram.dispatcher - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-04-29 20:38:08,107 - aiogram.dispatcher - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8423450313)
+2026-04-29 20:38:08,372 - aiogram.dispatcher - INFO - Polling stopped for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
+2026-04-29 20:38:11,584 - database - INFO - База данных готова
+2026-04-29 20:38:12,049 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x0000028BA06A2A50>
+2026-04-29 20:38:12,050 - asyncio - ERROR - Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x0000028BA06C6450>, 671811.6578604)])']
+connector: <aiohttp.connector.TCPConnector object at 0x0000028BA06A2660>
+2026-04-29 20:39:40,665 - database - INFO - База данных готова
+2026-04-29 20:39:41,058 - __main__ - INFO - Канал: PustoNTO (ID=-1003993575410)
+2026-04-29 20:39:41,138 - __main__ - INFO - Чат: test (ID=-1003321987793)
+2026-04-29 20:39:41,140 - chat_reader - INFO - Загружено 2202 запрещённых слов
+2026-04-29 20:39:41,140 - chat_reader - INFO - Загружено patterns_hard.txt
+2026-04-29 20:39:41,140 - chat_reader - INFO - Загружено patterns_soft.txt
+2026-04-29 20:39:41,140 - __main__ - INFO - Бот запущен
+2026-04-29 20:39:41,140 - aiogram.dispatcher - INFO - Start polling
+2026-04-29 20:39:41,195 - aiogram.dispatcher - INFO - Run polling for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
+2026-04-29 20:41:12,201 - aiogram.event - INFO - Update id=257542099 is handled. Duration 280 ms by bot id=8423450313
+2026-04-29 20:41:14,541 - chat_reader - INFO - Сообщение: user=Матвей Б... | ContentType.TEXT | текст='найс'
+2026-04-29 20:41:14,885 - aiogram.event - INFO - Update id=257542100 is handled. Duration 343 ms by bot id=8423450313
+2026-04-29 20:47:24,242 - aiogram.dispatcher - INFO - Polling stopped
+2026-04-29 20:47:24,243 - aiogram.dispatcher - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-04-29 20:47:24,243 - aiogram.dispatcher - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8423450313)
+2026-04-29 20:47:24,506 - aiogram.dispatcher - INFO - Polling stopped for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
+2026-04-29 23:42:46,991 - database - INFO - База данных готова
+2026-04-29 23:43:08,370 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x000001BA6A832A50>
+2026-04-29 23:43:25,577 - database - INFO - База данных готова
+2026-04-29 23:43:26,047 - __main__ - INFO - Канал: PustoNTO (ID=-1003993575410)
+2026-04-29 23:43:26,149 - __main__ - INFO - Чат: test (ID=-1003321987793)
+2026-04-29 23:43:26,152 - chat_reader - INFO - Загружено 2202 запрещённых слов
+2026-04-29 23:43:26,152 - chat_reader - INFO - Загружено patterns_hard.txt
+2026-04-29 23:43:26,152 - chat_reader - INFO - Загружено patterns_soft.txt
+2026-04-29 23:43:26,152 - __main__ - INFO - Бот запущен
+2026-04-29 23:43:26,153 - aiogram.dispatcher - INFO - Start polling
+2026-04-29 23:43:26,228 - aiogram.dispatcher - INFO - Run polling for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
+2026-04-29 23:43:48,328 - aiogram.event - INFO - Update id=257542101 is handled. Duration 397 ms by bot id=8423450313
+2026-04-29 23:44:28,863 - aiogram.dispatcher - INFO - Polling stopped
+2026-04-29 23:44:28,864 - aiogram.dispatcher - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-04-29 23:44:28,864 - aiogram.dispatcher - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 8423450313)
+2026-04-29 23:44:29,117 - aiogram.dispatcher - INFO - Polling stopped for bot @NTO_Glados_bot id=8423450313 - 'NTO_Glados'
