@@ -12,7 +12,7 @@ from database import init_db
 
 load_dotenv()
 
-DATA_DIR = os.getenv("DATA_DIR", "./")
+DATA_DIR = os.getenv("DATA_DIR", "data")
 LOG_FILE = os.path.join(DATA_DIR, "bot.log")
 
 handler = TimedRotatingFileHandler(
