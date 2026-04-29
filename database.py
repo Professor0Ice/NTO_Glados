@@ -1,10 +1,14 @@
 import sqlite3
 import logging
+import os
 
 logger = logging.getLogger(__name__)
-DB_PATH = "users.db"
+
+DATA_DIR = os.getenv("DATA_DIR", "./")
+DB_PATH = os.path.join(DATA_DIR, "users.db")
 
 def init_db():
+    os.makedirs(DATA_DIR, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""
@@ -17,7 +21,7 @@ def init_db():
     """)
     conn.commit()
     conn.close()
-    logger.info("База данных готова")
+    logger.info(f"База данных готова: {DB_PATH}")
 
 def get_user(user_id: int) -> dict:
     conn = sqlite3.connect(DB_PATH)

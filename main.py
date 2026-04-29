@@ -12,6 +12,9 @@ from database import init_db
 
 load_dotenv()
 
+DATA_DIR = os.getenv("DATA_DIR", "./")
+LOG_FILE = os.path.join(DATA_DIR, "bot.log")
+
 handler = TimedRotatingFileHandler(
     "bot.log",
     when="midnight",
@@ -23,8 +26,9 @@ handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s -
 
 logging.basicConfig(
     level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        handler,
+        logging.FileHandler(LOG_FILE, encoding="utf-8"),
         logging.StreamHandler()
     ]
 )
