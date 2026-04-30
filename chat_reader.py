@@ -3,6 +3,7 @@ import re
 from datetime import datetime, timedelta
 from collections import defaultdict
 import asyncio
+import string
 
 from aiogram import Router, Bot
 from aiogram.types import Message
@@ -173,7 +174,13 @@ async def filter_flood(message: Message, bot: Bot):
 def is_emoji_only(text: str) -> bool:
     if not text:
         return False
-    cleaned = re.sub(r'[\w\s!"#$%&\'()*+,\-./:;<=>?@[\\\]^_`{|}~]', '', text)
+
+    if re.search(r'[a-zA-Zа-яёЁ0-9]', text):
+        return False
+
+    chars_to_remove = string.whitespace + string.punctuation + '«»—…'
+    cleaned = text.translate(str.maketrans('', '', chars_to_remove))
+
     return bool(cleaned)
 
 # ---------- Предупреждение и бан новичков ----------
@@ -253,7 +260,15 @@ async def filter_new_user(message: Message, bot: Bot, target_chat_id: int, hard_
         return await give_warning(bot, message, target_chat_id, "медиа запрещены")
 
     # Ссылки
+    has_link = False
     if text and ('http://' in text or 'https://' in text or 't.me/' in text):
+        has_link = True
+    if message.entities:
+        for entity in message.entities:
+            if entity.type in ("url", "text_link"):
+                has_link = True
+                break
+    if has_link:
         await message.delete()
         return await give_warning(bot, message, target_chat_id, "ссылки запрещены")
 
