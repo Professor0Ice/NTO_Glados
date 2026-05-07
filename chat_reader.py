@@ -329,6 +329,9 @@ def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None):
                             logger.error(f"Ошибка при удалении бота: {e}")
             return
 
+        if message.from_user and message.from_user.first_name == "Telegram":
+            return
+
         user = message.from_user.full_name if message.from_user else "Unknown"
         text = message.text or message.caption or ""
 
