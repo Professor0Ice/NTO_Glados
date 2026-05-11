@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import asyncio
 import string
+import os
 
 from aiogram import Router, Bot
 from aiogram.types import Message
@@ -12,6 +13,27 @@ from database import get_user, add_message, delete_user, is_verified
 
 logger = logging.getLogger(__name__)
 chat_reader_router = Router()
+
+#Для темы счёта
+DATA_DIR = os.getenv("DATA_DIR", "./")
+COUNTER_FILE = os.path.join(DATA_DIR, "counter_state.txt")
+
+def load_counter_state():
+    try:
+        with open(COUNTER_FILE, "r", encoding="utf-8") as f:
+            lines = f.read().splitlines()
+            if len(lines) >= 2:
+                last_number = int(lines[0])
+                last_user_id = int(lines[1]) if lines[1].isdigit() else None
+                return last_number, last_user_id
+    except (FileNotFoundError, ValueError):
+        pass
+    return 0, None
+
+def save_counter_state(number, user_id):
+    os.makedirs(os.path.dirname(COUNTER_FILE), exist_ok=True)
+    with open(COUNTER_FILE, "w", encoding="utf-8") as f:
+        f.write(f"{number}\n{user_id}")
 
 # ---------- Настройки антифлуда ----------
 FLOOD_MAX_COUNT = 3
@@ -22,7 +44,7 @@ FLOOD_MAX_AGE_SEC = 1200
 # Антиспам
 NEW_USER_MSG_LIMIT = 2            # Сколько чистых сообщений нужно, чтобы стать проверенным
 WARNING_BAN_THRESHOLD = 2        # После скольких предупреждений жёсткий бан
-WARNING_DELETE_AFTER = 30       # Через сколько секунд удалять предупреждения бота
+WARNING_DELETE_AFTER = 15       # Через сколько секунд удалять предупреждения бота
 warnings = defaultdict(int)      # предупреждения в памяти
 
 # Хранилище состояний для антифлуда
@@ -306,6 +328,27 @@ async def filter_soft_spam(message: Message, bot: Bot, soft_patterns: list):
             return False
     return True
 
+async def handle_counter_message(message: Message):
+    global last_counter_number, last_counter_user
+    text = (message.text or message.caption or "").strip()
+    if not text.isdigit():
+        await message.delete()
+        return
+
+    num = int(text)
+    if num != last_counter_number + 1:
+        await message.delete()
+        return
+
+    if message.from_user.id == last_counter_user:
+        await message.delete()
+        return
+
+    last_counter_number = num
+    last_counter_user = message.from_user.id
+    save_counter_state(last_counter_number, last_counter_user)
+    logger.info(f"Счётчик: {num} от {message.from_user.full_name}")
+
 # ---------- Главный обработчик (всё в одном) ----------
 def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None):
     if bot_config is None:
@@ -315,8 +358,22 @@ def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None):
     hard_patterns = load_patterns("patterns_hard.txt")
     soft_patterns = load_patterns("patterns_soft.txt")
 
+    global last_counter_number, last_counter_user
+    counter_thread_id = os.getenv("COUNTER_THREAD_ID")
+    if counter_thread_id:
+        counter_thread_id = int(counter_thread_id)
+        last_counter_number, last_counter_user = load_counter_state()
+        logger.info(f"Счётчик активен в теме {counter_thread_id}, последнее число: {last_counter_number}")
+    else:
+        last_counter_number = None
+
     @chat_reader_router.message()
     async def handle_all(message: Message):
+
+        if last_counter_number is not None and message.message_thread_id == counter_thread_id:
+            await handle_counter_message(message)
+            return
+
         if message.new_chat_members and message.chat.id == target_chat_id:
             if not bot_config.get("allow_other_bots", False):
                 for new_member in message.new_chat_members:
