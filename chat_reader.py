@@ -250,16 +250,16 @@ async def filter_new_user(message: Message, bot: Bot, target_chat_id: int, hard_
     text = message.text or message.caption or ""
 
     # Эмодзи → бан
-    if text and is_emoji_only(text):
-        await message.delete()
-        try:
-            await bot.ban_chat_member(target_chat_id, user_id)
-            logger.info(f"Забанен {message.from_user.full_name} за эмодзи")
-        except Exception as e:
-            logger.error(f"Ошибка бана за эмодзи: {e}")
-        delete_user(user_id)
-        warnings.pop(user_id, None)
-        return False
+    #if text and is_emoji_only(text):
+    #    await message.delete()
+    #    try:
+    #        await bot.ban_chat_member(target_chat_id, user_id)
+    #        logger.info(f"Забанен {message.from_user.full_name} за эмодзи")
+    #    except Exception as e:
+    #        logger.error(f"Ошибка бана за эмодзи: {e}")
+    #    delete_user(user_id)
+    #    warnings.pop(user_id, None)
+    #    return False
 
     # Жёсткие паттерны → бан
     if text:
