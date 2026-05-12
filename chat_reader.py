@@ -328,8 +328,20 @@ async def filter_soft_spam(message: Message, bot: Bot, soft_patterns: list):
             return False
     return True
 
-async def handle_counter_message(message: Message):
+async def handle_counter_message(message: Message, bot: Bot, target_chat_id: int):
     global last_counter_number, last_counter_user
+
+    if await is_admin(bot, target_chat_id, message.from_user.id):
+        text = (message.text or message.caption or "").strip()
+        if text.isdigit():
+            num = int(text)
+            if num == last_counter_number + 1 and message.from_user.id != last_counter_user:
+                last_counter_number = num
+                last_counter_user = message.from_user.id
+                save_counter_state(last_counter_number, last_counter_user)
+                logger.info(f"Счётчик: {num} от {message.from_user.full_name} (админ)")
+        return
+
     text = (message.text or message.caption or "").strip()
     if not text.isdigit():
         await message.delete()
@@ -371,7 +383,7 @@ def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None):
     async def handle_all(message: Message):
 
         if last_counter_number is not None and message.message_thread_id == counter_thread_id:
-            await handle_counter_message(message)
+            await handle_counter_message(message, bot, target_chat_id)
             return
 
         if message.new_chat_members and message.chat.id == target_chat_id:
