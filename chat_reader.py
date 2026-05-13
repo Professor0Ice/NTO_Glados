@@ -277,7 +277,7 @@ async def filter_new_user(message: Message, bot: Bot, target_chat_id: int, hard_
                 return False
 
     # Медиа (кроме стикеров)
-    if message.photo or message.video or message.document or message.animation or message.voice or message.video_note:
+    if message.photo or message.video or message.document or message.animation or message.voice or message.video_note or message.story:
         await message.delete()
         return await give_warning(bot, message, target_chat_id, "медиа запрещены")
 
