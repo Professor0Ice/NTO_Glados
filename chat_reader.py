@@ -43,7 +43,7 @@ FLOOD_MAX_AGE_SEC = 1200
 
 # Антиспам
 NEW_USER_MSG_LIMIT = 2            # Сколько чистых сообщений нужно, чтобы стать проверенным
-WARNING_BAN_THRESHOLD = 2        # После скольких предупреждений жёсткий бан
+WARNING_BAN_THRESHOLD = 3        # После скольких предупреждений бан
 WARNING_DELETE_AFTER = 15       # Через сколько секунд удалять предупреждения бота
 warnings = defaultdict(int)      # предупреждения в памяти
 
