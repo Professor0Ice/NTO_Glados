@@ -197,6 +197,9 @@ def is_emoji_only(text: str) -> bool:
     if not text:
         return False
 
+    if len(text) < 6:
+        return False
+
     if any(c.isalpha() or c.isdigit() for c in text):
         return False
 
