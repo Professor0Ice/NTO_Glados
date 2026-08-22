@@ -450,8 +450,9 @@ def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None):
         # Фильтры
         if not await filter_flood(message, bot):
             return
-        if not await filter_new_user(message, bot, target_chat_id, hard_patterns):
-            return
+        if message.message_thread_id == 1:
+            if not await filter_new_user(message, bot, target_chat_id, hard_patterns):
+                return
         if not await filter_soft_spam(message, bot, soft_patterns):
             return
         if not await filter_stickers(message, bot, allowed_packs):
