@@ -1,6 +1,7 @@
 import sqlite3
 import logging
 import os
+from contextlib import closing
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,14 @@ def init_db():
             username TEXT,
             message_count INTEGER DEFAULT 0,
             is_verified INTEGER DEFAULT 0
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS moderation_warnings (
+            chat_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            message_id INTEGER NOT NULL,
+            PRIMARY KEY (chat_id, user_id, message_id)
         )
     """)
     conn.commit()
@@ -70,3 +79,32 @@ def delete_user(user_id: int):
 def is_verified(user_id: int) -> bool:
     user = get_user(user_id)
     return user.get("is_verified", 0) == 1
+
+
+def get_warning_count(chat_id: int, user_id: int) -> int:
+    with closing(sqlite3.connect(DB_PATH)) as conn:
+        return conn.execute(
+            "SELECT COUNT(*) FROM moderation_warnings WHERE chat_id = ? AND user_id = ?",
+            (chat_id, user_id),
+        ).fetchone()[0]
+
+
+def add_warning(chat_id: int, user_id: int, message_id: int) -> int:
+    # A repeated delivery/edit of the same message must not count as a new warning.
+    with closing(sqlite3.connect(DB_PATH)) as conn, conn:
+        conn.execute(
+            "INSERT OR IGNORE INTO moderation_warnings (chat_id, user_id, message_id) VALUES (?, ?, ?)",
+            (chat_id, user_id, message_id),
+        )
+        return conn.execute(
+            "SELECT COUNT(*) FROM moderation_warnings WHERE chat_id = ? AND user_id = ?",
+            (chat_id, user_id),
+        ).fetchone()[0]
+
+
+def clear_warnings(chat_id: int, user_id: int):
+    with closing(sqlite3.connect(DB_PATH)) as conn, conn:
+        conn.execute(
+            "DELETE FROM moderation_warnings WHERE chat_id = ? AND user_id = ?",
+            (chat_id, user_id),
+        )

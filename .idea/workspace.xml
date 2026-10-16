@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f02b5bc7-1b00-4205-90ab-65d4ddb8af73" name="Changes" comment="" />
+    <list default="true" id="f02b5bc7-1b00-4205-90ab-65d4ddb8af73" name="Changes" comment="return last version">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -54,27 +56,34 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.admin.executor": "Run",
-    "Python.chat_reader.executor": "Run",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "temp",
-    "last_opened_file_path": "C:/Users/User/PyCharmMiscProject/NTO_Glados",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.fileTypes"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.admin.executor&quot;: &quot;Run&quot;,
+    &quot;Python.chat_reader.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/User/PyCharmMiscProject/NTO_Glados&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.language&quot;
   }
-}]]></component>
+}</component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings is-module-sdk="true">
+        <option name="myUseModuleSdk" value="true" />
+      </console-settings>
+    </option>
+  </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\User\PyCharmMiscProject\NTO_Glados" />
@@ -122,6 +131,367 @@
       <option name="presentableId" value="Default" />
       <updated>1777408785778</updated>
     </task>
+    <task id="LOCAL-00001" summary="inital commit">
+      <option name="closed" value="true" />
+      <created>1777495785288</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1777495785288</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Add info for host">
+      <option name="closed" value="true" />
+      <created>1777496196299</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1777496196299</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Change directory log and db">
+      <option name="closed" value="true" />
+      <created>1777499186645</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1777499186645</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Change directory log and db 2">
+      <option name="closed" value="true" />
+      <created>1777502113096</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1777502113096</updated>
+    </task>
+    <task id="LOCAL-00005" summary="add base and fix">
+      <option name="closed" value="true" />
+      <created>1777544794320</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1777544794320</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Add base">
+      <option name="closed" value="true" />
+      <created>1777626467085</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1777626467085</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Add base">
+      <option name="closed" value="true" />
+      <created>1777634625857</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1777634625857</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Add base">
+      <option name="closed" value="true" />
+      <created>1777638220103</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1777638220103</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Add base and change settings">
+      <option name="closed" value="true" />
+      <created>1777805728251</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1777805728251</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Add base">
+      <option name="closed" value="true" />
+      <created>1777908687260</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1777908687260</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Add base">
+      <option name="closed" value="true" />
+      <created>1777974027090</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1777974027090</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Add stikers">
+      <option name="closed" value="true" />
+      <created>1777987194108</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1777987194108</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Add base and fix tg uved">
+      <option name="closed" value="true" />
+      <created>1778115524876</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1778115524876</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Update СЧЁТ">
+      <option name="closed" value="true" />
+      <created>1778526719009</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1778526719009</updated>
+    </task>
+    <task id="LOCAL-00015" summary="fix">
+      <option name="closed" value="true" />
+      <created>1778527138696</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1778527138696</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Remove emoji ban">
+      <option name="closed" value="true" />
+      <created>1778529879446</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1778529879446</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Emoji ban on and fix">
+      <option name="closed" value="true" />
+      <created>1778567123574</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1778567123574</updated>
+    </task>
+    <task id="LOCAL-00018" summary="New admin permission">
+      <option name="closed" value="true" />
+      <created>1778574501328</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1778574501328</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Remove bad_wors">
+      <option name="closed" value="true" />
+      <created>1778584822680</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1778584822680</updated>
+    </task>
+    <task id="LOCAL-00020" summary="fix spam patterns">
+      <option name="closed" value="true" />
+      <created>1778661502180</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1778661502180</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Add ban story new users">
+      <option name="closed" value="true" />
+      <created>1778663019569</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1778663019569</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Add patterns_hard">
+      <option name="closed" value="true" />
+      <created>1778824013092</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1778824013092</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Add patterns_hard">
+      <option name="closed" value="true" />
+      <created>1778866046899</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1778866046899</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Change settings anti-spam">
+      <option name="closed" value="true" />
+      <created>1779007442814</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1779007442814</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Add patterns_hard">
+      <option name="closed" value="true" />
+      <created>1779094534421</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1779094534421</updated>
+    </task>
+    <task id="LOCAL-00026" summary="Add patterns_hard">
+      <option name="closed" value="true" />
+      <created>1779203050243</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1779203050243</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Add patterns_hard">
+      <option name="closed" value="true" />
+      <created>1779215774012</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1779215774012</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Add patterns_hard">
+      <option name="closed" value="true" />
+      <created>1779354292499</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1779354292499</updated>
+    </task>
+    <task id="LOCAL-00029" summary="fix">
+      <option name="closed" value="true" />
+      <created>1779358858246</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1779358858246</updated>
+    </task>
+    <task id="LOCAL-00030" summary="fix">
+      <option name="closed" value="true" />
+      <created>1779466386512</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1779466386512</updated>
+    </task>
+    <task id="LOCAL-00031" summary="fix+">
+      <option name="closed" value="true" />
+      <created>1779466472603</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1779466472603</updated>
+    </task>
+    <task id="LOCAL-00032" summary="fix">
+      <option name="closed" value="true" />
+      <created>1779484557176</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1779484557176</updated>
+    </task>
+    <task id="LOCAL-00033" summary="fix emoji-ban">
+      <option name="closed" value="true" />
+      <created>1779624068729</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1779624068729</updated>
+    </task>
+    <task id="LOCAL-00034" summary="add hard_patterns">
+      <option name="closed" value="true" />
+      <created>1780322621138</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1780322621138</updated>
+    </task>
+    <task id="LOCAL-00035" summary="add hard_patterns">
+      <option name="closed" value="true" />
+      <created>1780838662610</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1780838662610</updated>
+    </task>
+    <task id="LOCAL-00036" summary="add hard_patterns">
+      <option name="closed" value="true" />
+      <created>1780949013780</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1780949013780</updated>
+    </task>
+    <task id="LOCAL-00037" summary="add hard_patterns">
+      <option name="closed" value="true" />
+      <created>1782104599690</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1782104599690</updated>
+    </task>
+    <task id="LOCAL-00038" summary="add hard_patterns">
+      <option name="closed" value="true" />
+      <created>1784704157580</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1784704157580</updated>
+    </task>
+    <task id="LOCAL-00039" summary="add hard_patterns">
+      <option name="closed" value="true" />
+      <created>1785908051057</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1785908051057</updated>
+    </task>
+    <task id="LOCAL-00040" summary="add hard_patterns">
+      <option name="closed" value="true" />
+      <created>1785908936551</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1785908936551</updated>
+    </task>
+    <task id="LOCAL-00041" summary="add hard_patterns">
+      <option name="closed" value="true" />
+      <created>1786022010973</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1786022010973</updated>
+    </task>
+    <task id="LOCAL-00042" summary="add hard_patterns">
+      <option name="closed" value="true" />
+      <created>1786165904586</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1786165904586</updated>
+    </task>
+    <task id="LOCAL-00043" summary="fix hard_patterns">
+      <option name="closed" value="true" />
+      <created>1786167552811</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1786167552811</updated>
+    </task>
+    <task id="LOCAL-00044" summary="update patterns">
+      <option name="closed" value="true" />
+      <created>1787371346985</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1787371346985</updated>
+    </task>
+    <task id="LOCAL-00045" summary="return last version">
+      <option name="closed" value="true" />
+      <created>1787599548070</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1787599548070</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -149,5 +519,33 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="inital commit" />
+    <MESSAGE value="Add info for host" />
+    <MESSAGE value="Change directory log and db" />
+    <MESSAGE value="Change directory log and db 2" />
+    <MESSAGE value="add base and fix" />
+    <MESSAGE value="Add base and change settings" />
+    <MESSAGE value="Add base" />
+    <MESSAGE value="Add stikers" />
+    <MESSAGE value="Add base and fix tg uved" />
+    <MESSAGE value="Update СЧЁТ" />
+    <MESSAGE value="Remove emoji ban" />
+    <MESSAGE value="Emoji ban on and fix" />
+    <MESSAGE value="New admin permission" />
+    <MESSAGE value="Remove bad_wors" />
+    <MESSAGE value="fix spam patterns" />
+    <MESSAGE value="Add ban story new users" />
+    <MESSAGE value="Change settings anti-spam" />
+    <MESSAGE value="Add patterns_hard" />
+    <MESSAGE value="fix+" />
+    <MESSAGE value="fix" />
+    <MESSAGE value="fix emoji-ban" />
+    <MESSAGE value="add hard_patterns" />
+    <MESSAGE value="fix hard_patterns" />
+    <MESSAGE value="update patterns" />
+    <MESSAGE value="return last version" />
+    <option name="LAST_COMMIT_MESSAGE" value="return last version" />
   </component>
 </project>

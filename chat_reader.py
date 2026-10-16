@@ -9,10 +9,11 @@ import os
 from aiogram import Router, Bot
 from aiogram.types import Message
 
-from database import get_user, add_message, delete_user, is_verified
+from database import get_user, add_message, delete_user, add_warning, clear_warnings
+from moderation_content import inspect_content, has_untrusted_source
+from spam_patterns import find_pattern, find_spam_rule, load_spam_rules
 
 logger = logging.getLogger(__name__)
-chat_reader_router = Router()
 
 #Для темы счёта
 DATA_DIR = os.getenv("DATA_DIR", "./")
@@ -45,7 +46,6 @@ FLOOD_MAX_AGE_SEC = 1200
 NEW_USER_MSG_LIMIT = 2            # Сколько чистых сообщений нужно, чтобы стать проверенным
 WARNING_BAN_THRESHOLD = 3        # После скольких предупреждений бан
 WARNING_DELETE_AFTER = 15       # Через сколько секунд удалять предупреждения бота
-warnings = defaultdict(int)      # предупреждения в памяти
 
 # Хранилище состояний для антифлуда
 flood_tracker = defaultdict(lambda: {"text": "", "count": 0, "first_seen": datetime.now()})
@@ -73,7 +73,8 @@ def load_bad_words(path="bad_words.txt"):
 def load_patterns(path):
     try:
         with open(path, "r", encoding="utf-8") as f:
-            patterns = [line.strip().lower() for line in f if line.strip()]
+            patterns = list(dict.fromkeys(
+                line.strip().lower() for line in f if line.strip() and not line.lstrip().startswith("#")))
         logger.info(f"Загружено {path}")
         return patterns
     except FileNotFoundError:
@@ -116,13 +117,13 @@ async def filter_stickers(message: Message, bot: Bot, allowed_packs: list):
     return True
 
 async def filter_bad_words(message: Message, bot: Bot, bad_words: set):
-    if not message.text and not message.caption:
+    text = inspect_content(message).text
+    if not text:
         return True
 
     if await is_admin(bot, message.chat.id, message.from_user.id):
         return True
 
-    text = message.text or message.caption
     words = tokenize(text)
 
     for word in words:
@@ -211,21 +212,21 @@ def is_emoji_only(text: str) -> bool:
 # ---------- Предупреждение и бан новичков ----------
 async def give_warning(bot: Bot, message: Message, target_chat_id: int, reason: str) -> bool:
     user_id = message.from_user.id
-    warnings[user_id] += 1
-    current_warnings = warnings[user_id]
+    current_warnings = add_warning(target_chat_id, user_id, message.message_id)
 
     if current_warnings >= WARNING_BAN_THRESHOLD:
         try:
             await bot.ban_chat_member(target_chat_id, user_id)
             logger.info(f"Забанен {message.from_user.full_name}")
+            delete_user(user_id)
+            clear_warnings(target_chat_id, user_id)
         except Exception as e:
             logger.error(f"Ошибка бана: {e}")
-        delete_user(user_id)
-        warnings.pop(user_id, None)
         return False
 
     warning_msg = await message.answer(
-        f"{message.from_user.full_name}, {reason}\n"
+        f"{message.from_user.full_name}, {reason}. "
+        f"Предупреждение {current_warnings}/{WARNING_BAN_THRESHOLD}.\n"
         f"Пока вы новичок в этой группе, вам разрешён только текст"
     )
 
@@ -240,7 +241,9 @@ async def give_warning(bot: Bot, message: Message, target_chat_id: int, reason: 
     return False
 
 # ---------- Жёсткий фильтр для новичков ----------
-async def filter_new_user(message: Message, bot: Bot, target_chat_id: int, hard_patterns: list):
+async def filter_new_user(message: Message, bot: Bot, target_chat_id: int, hard_patterns: list,
+                          trusted_chat_ids: set[int] | None = None, *, is_edit: bool = False,
+                          spam_rules=()):
     if await is_admin(bot, message.chat.id, message.from_user.id):
         return True
 
@@ -250,85 +253,75 @@ async def filter_new_user(message: Message, bot: Bot, target_chat_id: int, hard_
     if user.get("is_verified", 0) == 1:
         return True
 
-    text = message.text or message.caption or ""
+    content = inspect_content(message)
+    text = content.text
 
-    # Эмодзи → бан
-    if text and is_emoji_only(text):
+    # Жёсткие паттерны → бан
+    pattern = find_pattern(text, hard_patterns)
+    if pattern:
         await message.delete()
         try:
             await bot.ban_chat_member(target_chat_id, user_id)
-            logger.info(f"Забанен {message.from_user.full_name} за эмодзи")
+            logger.info(f"Забанен {message.from_user.full_name} за спам-паттерн '{pattern}'")
+            delete_user(user_id)
+            clear_warnings(target_chat_id, user_id)
         except Exception as e:
-            logger.error(f"Ошибка бана за эмодзи: {e}")
-        delete_user(user_id)
-        warnings.pop(user_id, None)
+            logger.error(f"Ошибка бана: {e}")
         return False
 
-    # Жёсткие паттерны → бан
-    if text:
-        lower_text = text.lower()
-        for pattern in hard_patterns:
-            if pattern in lower_text:
-                await message.delete()
-                try:
-                    await bot.ban_chat_member(target_chat_id, user_id)
-                    logger.info(f"Забанен {message.from_user.full_name} за спам-паттерн '{pattern}'")
-                except Exception as e:
-                    logger.error(f"Ошибка бана за спам: {e}")
-                delete_user(user_id)
-                warnings.pop(user_id, None)
-                return False
+    # Сочетания признаков рекламы → предупреждение вместо бана по одному слову.
+    rule = find_spam_rule(text, spam_rules)
+    if rule:
+        await message.delete()
+        logger.info("Удалена реклама от %s по правилу %s", message.from_user.full_name, rule)
+        return await give_warning(bot, message, target_chat_id, "рекламные предложения запрещены")
+
+    # Эмодзи → удаление и предупреждение, бан только за повторные нарушения.
+    if text and is_emoji_only(text):
+        await message.delete()
+        return await give_warning(bot, message, target_chat_id, "сообщения только из эмодзи запрещены")
+
+    if has_untrusted_source(message, trusted_chat_ids or {target_chat_id}):
+        await message.delete()
+        return await give_warning(bot, message, target_chat_id,
+                                  "пересылки и цитаты из неизвестных источников запрещены")
 
     # Медиа (кроме стикеров)
-    if message.photo or message.video or message.document or message.animation or message.voice or message.video_note or message.story:
+    if content.has_media:
         await message.delete()
         return await give_warning(bot, message, target_chat_id, "медиа запрещены")
 
     # Ссылки
-    has_link = False
-    if text and ('http://' in text or 'https://' in text or 't.me/' in text):
-        has_link = True
-    if message.entities:
-        for entity in message.entities:
-            if entity.type in ("url", "text_link"):
-                has_link = True
-                break
-    if has_link:
+    if content.has_link:
         await message.delete()
         return await give_warning(bot, message, target_chat_id, "ссылки запрещены")
 
     # Упоминания
-    if text and '@' in text:
-        if message.entities:
-            for entity in message.entities:
-                if entity.type in ("mention", "text_mention"):
-                    await message.delete()
-                    return await give_warning(bot, message, target_chat_id, "упоминания запрещены")
-        else:
-            await message.delete()
-            return await give_warning(bot, message, target_chat_id, "упоминания запрещены")
+    if content.has_mention:
+        await message.delete()
+        return await give_warning(bot, message, target_chat_id, "упоминания запрещены")
 
     # Чистое сообщение
-    became_verified = add_message(user_id, message.from_user.username or message.from_user.full_name)
+    became_verified = (not is_edit and add_message(
+        user_id, message.from_user.username or message.from_user.full_name))
     if became_verified:
         logger.info(f"Пользователь {message.from_user.full_name} теперь проверенный")
     return True
 
 # ---------- Лёгкий постоянный фильтр ----------
-async def filter_soft_spam(message: Message, bot: Bot, soft_patterns: list):
+async def filter_soft_spam(message: Message, bot: Bot, soft_patterns: list, spam_rules=()):
     if await is_admin(bot, message.chat.id, message.from_user.id):
         return True
 
-    text = message.text or message.caption or ""
+    text = inspect_content(message).text
     if not text:
         return True
 
-    lower_text = text.lower()
-    for pattern in soft_patterns:
-        if pattern in lower_text:
-            await message.delete()
-            logger.info(f"Удалено сообщение от {message.from_user.full_name} по спам паттерну '{pattern}'")
-            return False
+    reason = find_pattern(text, soft_patterns) or find_spam_rule(text, spam_rules)
+    if reason:
+        await message.delete()
+        logger.info("Удалено сообщение от %s по спам-правилу '%s'", message.from_user.full_name, reason)
+        return False
     return True
 
 async def handle_counter_message(message: Message, bot: Bot, target_chat_id: int):
@@ -365,13 +358,19 @@ async def handle_counter_message(message: Message, bot: Bot, target_chat_id: int
     logger.info(f"Счётчик: {num} от {message.from_user.full_name}")
 
 # ---------- Главный обработчик (всё в одном) ----------
-def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None):
+def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None,
+                      source_chat_id: int | None = None):
+    chat_reader_router = Router()
+    trusted_chat_ids = {target_chat_id}
+    if source_chat_id is not None:
+        trusted_chat_ids.add(source_chat_id)
     if bot_config is None:
         bot_config = {"allow_other_bots": False}
     allowed_packs = load_sticker_whitelist()
     bad_words = load_bad_words()
     hard_patterns = load_patterns("patterns_hard.txt")
     soft_patterns = load_patterns("patterns_soft.txt")
+    spam_rules = load_spam_rules()
 
     global last_counter_number, last_counter_user
     counter_thread_id = os.getenv("COUNTER_THREAD_ID")
@@ -382,10 +381,12 @@ def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None):
     else:
         last_counter_number = None
 
-    @chat_reader_router.message()
-    async def handle_all(message: Message):
+    async def handle_all(message: Message, *, is_edit: bool = False):
+        if message.chat.id != target_chat_id:
+            return
 
-        if last_counter_number is not None and message.message_thread_id == counter_thread_id:
+        if (not is_edit and message.from_user and last_counter_number is not None
+                and message.message_thread_id == counter_thread_id):
             await handle_counter_message(message, bot, target_chat_id)
             return
 
@@ -403,9 +404,11 @@ def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None):
 
         if message.from_user and message.from_user.first_name == "Telegram":
             return
+        if not message.from_user:
+            return
 
         user = message.from_user.full_name if message.from_user else "Unknown"
-        text = message.text or message.caption or ""
+        text = inspect_content(message).text
 
         media_info = ""
         if message.photo:
@@ -448,15 +451,24 @@ def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None):
             return
 
         # Фильтры
-        if not await filter_flood(message, bot):
+        if not is_edit and not await filter_flood(message, bot):
             return
-        if not await filter_new_user(message, bot, target_chat_id, hard_patterns):
+        if not await filter_new_user(message, bot, target_chat_id, hard_patterns,
+                                     trusted_chat_ids, is_edit=is_edit, spam_rules=spam_rules):
             return
-        if not await filter_soft_spam(message, bot, soft_patterns):
+        if not await filter_soft_spam(message, bot, soft_patterns, spam_rules):
             return
         if not await filter_stickers(message, bot, allowed_packs):
             return
         if not await filter_bad_words(message, bot, bad_words):
             return
+
+    @chat_reader_router.message()
+    async def handle_message(message: Message):
+        await handle_all(message)
+
+    @chat_reader_router.edited_message()
+    async def handle_edited_message(message: Message):
+        await handle_all(message, is_edit=True)
 
     return chat_reader_router

@@ -14,6 +14,7 @@ load_dotenv()
 
 DATA_DIR = os.getenv("DATA_DIR", "data")
 LOG_FILE = os.path.join(DATA_DIR, "bot.log")
+os.makedirs(DATA_DIR, exist_ok=True)
 
 handler = TimedRotatingFileHandler(
     "bot.log",
@@ -63,7 +64,7 @@ async def main():
     admin_router, bot_config = setup_admin(bot, target_chat_id)
     dp.include_router(admin_router)
     dp.include_router(setup_forwarder(source_chat_id, target_chat_id, cfg["TARGET_THREAD_ID"]))
-    dp.include_router(setup_chat_reader(bot, target_chat_id, bot_config))
+    dp.include_router(setup_chat_reader(bot, target_chat_id, bot_config, source_chat_id))
 
     logger.info("Бот запущен")
     await dp.start_polling(bot)
