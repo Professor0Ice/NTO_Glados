@@ -15,6 +15,10 @@ from spam_patterns import find_pattern, find_spam_rule, load_spam_rules
 
 logger = logging.getLogger(__name__)
 
+# Ищу команду/тиммейта: https://t.me/ontigamedev/209088
+# В этой теме только удаление по мягким фильтрам, без предупреждений, банов и мутов.
+TEAM_SEARCH_THREAD_ID = 209088
+
 #Для темы счёта
 DATA_DIR = os.getenv("DATA_DIR", "./")
 COUNTER_FILE = os.path.join(DATA_DIR, "counter_state.txt")
@@ -384,8 +388,9 @@ def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None,
     async def handle_all(message: Message, *, is_edit: bool = False):
         if message.chat.id != target_chat_id:
             return
+        is_team_topic = message.message_thread_id == TEAM_SEARCH_THREAD_ID
 
-        if (not is_edit and message.from_user and last_counter_number is not None
+        if (not is_team_topic and not is_edit and message.from_user and last_counter_number is not None
                 and message.message_thread_id == counter_thread_id):
             await handle_counter_message(message, bot, target_chat_id)
             return
@@ -451,11 +456,12 @@ def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None,
             return
 
         # Фильтры
-        if not is_edit and not await filter_flood(message, bot):
-            return
-        if not await filter_new_user(message, bot, target_chat_id, hard_patterns,
-                                     trusted_chat_ids, is_edit=is_edit, spam_rules=spam_rules):
-            return
+        if not is_team_topic:
+            if not is_edit and not await filter_flood(message, bot):
+                return
+            if not await filter_new_user(message, bot, target_chat_id, hard_patterns,
+                                         trusted_chat_ids, is_edit=is_edit, spam_rules=spam_rules):
+                return
         if not await filter_soft_spam(message, bot, soft_patterns, spam_rules):
             return
         if not await filter_stickers(message, bot, allowed_packs):
