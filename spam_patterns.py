@@ -9,6 +9,30 @@ from functools import lru_cache
 
 
 logger = logging.getLogger(__name__)
+
+# Extra conditions are deliberately combined with textual groups, never used alone.
+CONTACT_ACTION = re.compile(
+    r"(?<!\w)(?:(?:на)?пиш(?:и|ите|ете)(?!\w)|писать(?!\w)|отправ\w*|присыл\w*|став\w*|"
+    r"жд\w*|жду|обращ\w*|приглаша\w*|подробност\w*|детал\w*|расскаж\w*|объясн\w*)")
+PRIVATE_DESTINATION = re.compile(
+    r"(?<!\w)(?:л[\s.]*с\.?|(?:в|у)\s+(?:личн\w*|личк\w*|приват\w*|пп))(?!\w)|@\w{4,}")
+RESPONSE_PROMPT = re.compile(r"(?<!\w)(?:на)?пиш\w*.{0,35}(?:плюс|\+|старт)")
+# normalize_text preserves standalone amounts but may turn 0 into о in 10000р.
+PAY_AMOUNT = (r"(?<!\w)\d[\dо]*(?:[\s.,–—-]+\d[\dо]*)*\s*"
+              r"(?:тыс\w*\.?\s*)?(?:к(?!\w)|р(?!\w)|руб\w*|дол\w*|us[dд]|eur|зелен\w*)")
+PAY_PERIOD = (r"(?<!\w)(?:в|за|кажд\w*|/)?\s*"
+              r"(?:день|дн[яе]\w*|сутк\w*|недел\w*|месяц\w*|смен\w*|час\w*|ежеднев\w*|еженедел\w*)")
+PERIODIC_PAY = re.compile(rf"(?:{PAY_AMOUNT}.{{0,35}}?{PAY_PERIOD}|{PAY_PERIOD}.{{0,35}}?{PAY_AMOUNT})")
+FEATURES = {"private_contact", "periodic_pay"}
+
+
+def has_feature(text: str, name: str) -> bool:
+    if name == "private_contact":
+        return bool((CONTACT_ACTION.search(text) and PRIVATE_DESTINATION.search(text))
+                    or RESPONSE_PROMPT.search(text))
+    if name == "periodic_pay":
+        return bool(PERIODIC_PAY.search(text))
+    raise ValueError(f"Unknown spam feature: {name}")
 # Compare visual lookalikes in the matcher only; never rewrite original messages.
 LOOKALIKES = str.maketrans({
     "a": "а", "c": "с", "e": "е", "o": "о", "p": "р", "x": "х",
@@ -65,6 +89,7 @@ def find_pattern(text: str, patterns) -> str | None:
 class SpamRule:
     name: str
     groups: tuple[tuple[str, ...], ...]
+    features: tuple[str, ...] = ()
 
 
 def load_spam_rules(path="spam_rules.json") -> list[SpamRule]:
@@ -82,10 +107,14 @@ def load_spam_rules(path="spam_rules.json") -> list[SpamRule]:
         if not isinstance(entry, dict):
             raise ValueError(f"{path}: each rule must be an object")
         name, groups = entry.get("name"), entry.get("all")
+        features = entry.get("features", [])
         if not isinstance(name, str) or not name or name in names:
             raise ValueError(f"{path}: rule names must be unique, non-empty strings")
-        if not isinstance(groups, list) or len(groups) < 2:
-            raise ValueError(f"{path}: {name}: at least two groups are required")
+        if (not isinstance(features, list) or not all(isinstance(item, str) and item in FEATURES for item in features)
+                or len(set(features)) != len(features)):
+            raise ValueError(f"{path}: {name}: invalid or duplicate feature")
+        if not isinstance(groups, list) or not groups or len(groups) + len(features) < 2:
+            raise ValueError(f"{path}: {name}: at least two conditions are required")
         for group in groups:
             if not isinstance(group, list) or not group:
                 raise ValueError(f"{path}: {name}: empty or invalid group")
@@ -93,7 +122,7 @@ def load_spam_rules(path="spam_rules.json") -> list[SpamRule]:
                 if not isinstance(pattern, str):
                     raise ValueError(f"{path}: {name}: patterns must be strings")
                 compile_pattern(pattern)
-        rules.append(SpamRule(name, tuple(tuple(group) for group in groups)))
+        rules.append(SpamRule(name, tuple(tuple(group) for group in groups), tuple(features)))
         names.add(name)
     logger.info("Загружено %s составных правил антиспама из %s", len(rules), path)
     return rules
@@ -103,6 +132,6 @@ def find_spam_rule(text: str, rules) -> str | None:
     normalized = normalize_text(text)
     for rule in rules:
         if all(any(compile_pattern(pattern).search(normalized) for pattern in group)
-               for group in rule.groups):
+               for group in rule.groups) and all(has_feature(normalized, name) for name in rule.features):
             return rule.name
     return None
