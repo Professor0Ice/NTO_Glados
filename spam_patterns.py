@@ -58,6 +58,37 @@ def normalize_text(text: str) -> str:
     return " ".join(text.split())
 
 
+UKRAINIAN_WORDS = frozenset("""
+привіт вітаю дякую перепрошую шукаю шукаємо потрібен потрібна потрібні потрібно
+маю маєш маємо мають якщо тоді щоб також треба немає можеш допомога
+допоможіть всім сьогодні щоденні щодня заняття програмування програміст
+програміста розробник розробники розробляю завдання задачі рішення навчання
+працюю працюємо працювати пишіть деталі подробиці бажання гарантуємо виплати
+віддалено повідомлення повідомленнях особисті цей ця ці цього який яка які
+мене звати важливі вік каналі посилання портфоліо приєднуйтесь
+запрошую оголошення учасники українською поясніть покажіть зробити зробив
+зробила зможу зможете досвід досвіду знання знаєте чому єдине
+""".split())
+LANGUAGE_STOP_WORDS = frozenset("""
+на за до по для не но это что как то да или без от про при об же бы ну
+""".split())
+
+
+def is_ukrainian_text(text: str) -> bool:
+    """Conservative posting-language heuristic; never classify a person or country."""
+    text = unicodedata.normalize("NFKC", text).casefold()
+    text = "".join(char for char in text if unicodedata.category(char) != "Cf")
+    # Programming examples and URLs do not establish a posting language.
+    text = re.sub(r"```.*?```|`[^`]*`|https?://\S+|@\w+", " ", text, flags=re.DOTALL)
+    words = [word for word in re.findall(r"[^\W\d_]+", text)
+             if len(word) >= 2 and word not in LANGUAGE_STOP_WORDS]
+    if len(words) < 3:
+        return False
+    hits = [word for word in words if word in UKRAINIAN_WORDS]
+    # No ban for an isolated letter, surname, country or one repeated word.
+    return len(set(hits)) >= 2 and len(hits) / len(words) >= 0.5
+
+
 @lru_cache(maxsize=1024)
 def compile_pattern(pattern: str) -> re.Pattern:
     normalized = normalize_text(pattern)
@@ -82,7 +113,13 @@ def compile_pattern(pattern: str) -> re.Pattern:
 
 def find_pattern(text: str, patterns) -> str | None:
     normalized = normalize_text(text)
-    return next((pattern for pattern in patterns if compile_pattern(pattern).search(normalized)), None)
+    for pattern in patterns:
+        if pattern == "language:uk":
+            if is_ukrainian_text(text):
+                return pattern
+        elif compile_pattern(pattern).search(normalized):
+            return pattern
+    return None
 
 
 @dataclass(frozen=True)
