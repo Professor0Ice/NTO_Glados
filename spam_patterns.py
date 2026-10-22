@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 # Extra conditions are deliberately combined with textual groups, never used alone.
 CONTACT_ACTION = re.compile(
-    r"(?<!\w)(?:(?:на)?пиш(?:и|ите|ете)(?!\w)|писать(?!\w)|отправ\w*|присыл\w*|став\w*|"
+    r"(?<!\w)(?:(?:на)?пиш(?:и|ите|ете|ить)(?!\w)|писать(?!\w)|писати(?!\w)|отправ\w*|присыл\w*|став\w*|"
     r"жд\w*|жду|обращ\w*|приглаша\w*|подробност\w*|детал\w*|расскаж\w*|объясн\w*)")
 PRIVATE_DESTINATION = re.compile(
-    r"(?<!\w)(?:л[\s.]*с\.?|(?:в|у)\s+(?:личн\w*|личк\w*|приват\w*|пп))(?!\w)|@\w{4,}")
+    r"(?<!\w)(?:л[\s.]*с\.?|(?:в|у)\s+(?:личн\w*|личк\w*|приват\w*|особист\w*|пп))(?!\w)|@\w{4,}")
 RESPONSE_PROMPT = re.compile(r"(?<!\w)(?:на)?пиш\w*.{0,35}(?:плюс|\+|старт)")
 # normalize_text preserves standalone amounts but may turn 0 into о in 10000р.
 PAY_AMOUNT = (r"(?<!\w)\d[\dо]*(?:[\s.,–—-]+\d[\dо]*)*\s*"
@@ -23,7 +23,20 @@ PAY_AMOUNT = (r"(?<!\w)\d[\dо]*(?:[\s.,–—-]+\d[\dо]*)*\s*"
 PAY_PERIOD = (r"(?<!\w)(?:в|за|кажд\w*|/)?\s*"
               r"(?:день|дн[яе]\w*|сутк\w*|недел\w*|месяц\w*|смен\w*|час\w*|ежеднев\w*|еженедел\w*)")
 PERIODIC_PAY = re.compile(rf"(?:{PAY_AMOUNT}.{{0,35}}?{PAY_PERIOD}|{PAY_PERIOD}.{{0,35}}?{PAY_AMOUNT})")
-FEATURES = {"private_contact", "periodic_pay"}
+# For generic offers, do not interpret '8к шагов в день' as daily income.
+ADJACENT_PERIODIC_PAY = re.compile(
+    rf"(?:{PAY_AMOUNT}\s*{PAY_PERIOD}(?!\w)|{PAY_PERIOD}(?!\w)\s*[:—–-]?\s*{PAY_AMOUNT})")
+# Only a direct offer at the start, not a question or a report about an ad.
+DIRECT_JOB_OFFER = re.compile(
+    r"^[^\w]*(?:(?:я|мы)\s+)?(?:дам|дадим|даю|даем|предлагаю|предлагаем)\s+"
+    r"(?:вам\s+)?(?:работу|подработку)(?!\w)")
+# In normalized words, attached digits 0 and 6 may become Cyrillic о and б.
+SAMPLE_WEIGHT = r"[\dоб]+(?:\s*[.,]\s*[\dоб]+)?\s*(?:г(?:р(?:ам(?:а|ов|ы)?)?)?|g)(?!\w)"
+DIRECT_SAMPLE_OFFER = re.compile(
+    r"^[^\w]*(?:есть|имеется|дам|даю|раздаю|предлагаю)\s+"
+    r"(?:бесплатн\w*\s+)?(?:проба|пробу|пробы|пробник\w*)(?!\w)\s*"
+    rf"(?:(?:на|по|весом)\s+)?{SAMPLE_WEIGHT}")
+FEATURES = {"private_contact", "periodic_pay", "adjacent_periodic_pay", "direct_job_offer", "direct_sample_offer"}
 
 
 def has_feature(text: str, name: str) -> bool:
@@ -32,6 +45,17 @@ def has_feature(text: str, name: str) -> bool:
                     or RESPONSE_PROMPT.search(text))
     if name == "periodic_pay":
         return bool(PERIODIC_PAY.search(text))
+    if name == "adjacent_periodic_pay":
+        return bool(ADJACENT_PERIODIC_PAY.search(text))
+    if name == "direct_job_offer":
+        return bool(DIRECT_JOB_OFFER.search(text))
+    if name == "direct_sample_offer":
+        match = DIRECT_SAMPLE_OFFER.match(text)
+        if not match:
+            return False
+        tail = re.sub(r"^[^\w]+", "", text[match.end():])
+        # A specified material (e.g. a lab sample) is not a generic sample ad.
+        return not tail or bool(CONTACT_ACTION.match(tail) and has_feature(tail, "private_contact"))
     raise ValueError(f"Unknown spam feature: {name}")
 # Compare visual lookalikes in the matcher only; never rewrite original messages.
 LOOKALIKES = str.maketrans({
@@ -68,6 +92,8 @@ UKRAINIAN_WORDS = frozenset("""
 мене звати важливі вік каналі посилання портфоліо приєднуйтесь
 запрошую оголошення учасники українською поясніть покажіть зробити зробив
 зробила зможу зможете досвід досвіду знання знаєте чому єдине
+професія професії професію навчаємо навчати роботі вхідні чаті відсоток
+премії щотижня підтримка першого
 """.split())
 LANGUAGE_STOP_WORDS = frozenset("""
 на за до по для не но это что как то да или без от про при об же бы ну
