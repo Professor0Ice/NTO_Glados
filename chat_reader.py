@@ -86,8 +86,24 @@ def load_patterns(path):
         return []
 
 def tokenize(text: str):
-    clean = re.sub(r'[^\w\s]', '', text.lower())
-    return clean.split()
+    # Punctuation separates words instead of joining them ("привет,бля").
+    return re.findall(r"\w+", text.casefold())
+
+
+def find_bad_word(text: str, bad_words: set[str]) -> str | None:
+    words = tokenize(text)
+    for word in words:
+        if word in bad_words:
+            return word
+    # Preserve dictionary phrases and hyphenated entries with whole-word bounds.
+    for bad in sorted(bad_words):
+        if " " not in bad and "-" not in bad:
+            continue
+        phrase = tokenize(bad)
+        if phrase and any(words[index:index + len(phrase)] == phrase
+                          for index in range(len(words) - len(phrase) + 1)):
+            return bad
+    return None
 
 async def is_admin(bot: Bot, chat_id: int, user_id: int) -> bool:
     try:
@@ -128,17 +144,14 @@ async def filter_bad_words(message: Message, bot: Bot, bad_words: set):
     if await is_admin(bot, message.chat.id, message.from_user.id):
         return True
 
-    words = tokenize(text)
-
-    for word in words:
-        for bad in bad_words:
-            if bad in word:
-                await message.delete()
-                logger.info(
-                    f"Удалено сообщение с запрещённым словом от {message.from_user.full_name}: "
-                    f"'{word}' содержит '{bad}'"
-                )
-                return False
+    bad = find_bad_word(text, bad_words)
+    if bad:
+        await message.delete()
+        logger.info(
+            "Удалено сообщение с запрещённым словом от %s: '%s'",
+            message.from_user.full_name, bad,
+        )
+        return False
     return True
 
 async def filter_flood(message: Message, bot: Bot):
