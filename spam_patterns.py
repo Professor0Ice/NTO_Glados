@@ -15,17 +15,19 @@ CONTACT_ACTION = re.compile(
     r"(?<!\w)(?:(?:на)?пиш(?:и|ите|ете|ить)(?!\w)|писать(?!\w)|писати(?!\w)|отправ\w*|присыл\w*|став\w*|"
     r"жд\w*|жду|обращ\w*|приглаша\w*|подробност\w*|детал\w*|расскаж\w*|объясн\w*)")
 PRIVATE_DESTINATION = re.compile(
-    r"(?<!\w)(?:л[\s.]*с\.?|(?:в|у)\s+(?:личн\w*|личк\w*|приват\w*|особист\w*|пп))(?!\w)|@\w{4,}")
+    r"(?<!\w)(?:л[\s.]*с\.?|(?:в|у)\s+(?:личн\w*|личк\w*|приват\w*|особист\w*|со?общени\w*|пп))(?!\w)|@\w{4,}")
 RESPONSE_PROMPT = re.compile(r"(?<!\w)(?:на)?пиш\w*.{0,35}(?:плюс|\+|старт)")
-# normalize_text preserves standalone amounts but may turn 0 into о in 10000р.
-PAY_AMOUNT = (r"(?<!\w)\d[\dо]*(?:[\s.,–—-]+\d[\dо]*)*\s*"
-              r"(?:тыс\w*\.?\s*)?(?:к(?!\w)|р(?!\w)|руб\w*|дол\w*|us[dд]|eur|зелен\w*)")
+# Attached digits 0/6 become о/б during normalization; retain their numeric role.
+PAY_AMOUNT = (r"(?<!\w)[\dб][\dоб]*(?:[\s.,–—-]+[\dб][\dоб]*)*\s*"
+              r"(?:тыс\w*\.?\s*)?(?:к(?!\w)|р(?!\w)|руб\w*|дол\w*|us[dд]|eur|зелен\w*|грн(?!\w)|грив\w*)")
 PAY_PERIOD = (r"(?<!\w)(?:в|за|кажд\w*|/)?\s*"
               r"(?:день|дн[яе]\w*|сутк\w*|недел\w*|месяц\w*|смен\w*|час\w*|ежеднев\w*|еженедел\w*)")
 PERIODIC_PAY = re.compile(rf"(?:{PAY_AMOUNT}.{{0,35}}?{PAY_PERIOD}|{PAY_PERIOD}.{{0,35}}?{PAY_AMOUNT})")
 # For generic offers, do not interpret '8к шагов в день' as daily income.
 ADJACENT_PERIODIC_PAY = re.compile(
-    rf"(?:{PAY_AMOUNT}\s*{PAY_PERIOD}(?!\w)|{PAY_PERIOD}(?!\w)\s*[:—–-]?\s*{PAY_AMOUNT})")
+    rf"(?:{PAY_AMOUNT}\s*{PAY_PERIOD}(?!\w)|"
+    rf"{PAY_PERIOD}(?!\w)\s*[:—–-]?\s*(?:(?:от|до)\s+)?{PAY_AMOUNT})")
+PAYMENT_AMOUNT = re.compile(PAY_AMOUNT)
 # Only a direct offer at the start, not a question or a report about an ad.
 DIRECT_JOB_OFFER = re.compile(
     r"^[^\w]*(?:(?:я|мы)\s+)?(?:дам|дадим|даю|даем|предлагаю|предлагаем)\s+"
@@ -36,7 +38,8 @@ DIRECT_SAMPLE_OFFER = re.compile(
     r"^[^\w]*(?:есть|имеется|дам|даю|раздаю|предлагаю)\s+"
     r"(?:бесплатн\w*\s+)?(?:проба|пробу|пробы|пробник\w*)(?!\w)\s*"
     rf"(?:(?:на|по|весом)\s+)?{SAMPLE_WEIGHT}")
-FEATURES = {"private_contact", "periodic_pay", "adjacent_periodic_pay", "direct_job_offer", "direct_sample_offer"}
+FEATURES = {"private_contact", "contact_prompt", "payment_amount", "periodic_pay",
+            "adjacent_periodic_pay", "direct_job_offer", "direct_sample_offer"}
 
 
 def has_feature(text: str, name: str) -> bool:
@@ -45,6 +48,10 @@ def has_feature(text: str, name: str) -> bool:
                     or RESPONSE_PROMPT.search(text))
     if name == "periodic_pay":
         return bool(PERIODIC_PAY.search(text))
+    if name == "contact_prompt":
+        return bool(CONTACT_ACTION.search(text))
+    if name == "payment_amount":
+        return bool(PAYMENT_AMOUNT.search(text))
     if name == "adjacent_periodic_pay":
         return bool(ADJACENT_PERIODIC_PAY.search(text))
     if name == "direct_job_offer":
@@ -94,6 +101,11 @@ UKRAINIAN_WORDS = frozenset("""
 зробила зможу зможете досвід досвіду знання знаєте чому єдине
 професія професії професію навчаємо навчати роботі вхідні чаті відсоток
 премії щотижня підтримка першого
+тобі років запрошуємо посаду комунікацій населенням опрацьовувати звернення
+середній дохід виплачуємо техніку надаємо початок роботи безпечному просторі
+після можливість кожні місяці днів відпустки
+кошти пропонуємо грошові позики всій від термін напишіть дізнатися умови
+отримати платежів
 """.split())
 LANGUAGE_STOP_WORDS = frozenset("""
 на за до по для не но это что как то да или без от про при об же бы ну
