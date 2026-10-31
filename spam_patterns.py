@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Extra conditions are deliberately combined with textual groups, never used alone.
 CONTACT_ACTION = re.compile(
-    r"(?<!\w)(?:(?:на)?пиш(?:и|ите|ете|ить)(?!\w)|писать(?!\w)|писати(?!\w)|отправ\w*|присыл\w*|став\w*|"
+    r"(?<!\w)(?:(?:на)?пиш(?:и|ите|ете|ить)(?!\w)|(?:на)?печат(?:ай|айте)(?!\w)|писать(?!\w)|писати(?!\w)|отправ\w*|присыл\w*|став\w*|"
     r"жд\w*|жду|обращ\w*|приглаша\w*|подробност\w*|детал\w*|расскаж\w*|объясн\w*)")
 PRIVATE_DESTINATION = re.compile(
     r"(?<!\w)(?:л[\s.]*с\.?|(?:в|у)\s+(?:личн\w*|личк\w*|приват\w*|особист\w*|со?общени\w*|пп))(?!\w)|@\w{4,}")
@@ -38,6 +38,10 @@ DIRECT_SAMPLE_OFFER = re.compile(
     r"^[^\w]*(?:есть|имеется|дам|даю|раздаю|предлагаю)\s+"
     r"(?:бесплатн\w*\s+)?(?:проба|пробу|пробы|пробник\w*)(?!\w)\s*"
     rf"(?:(?:на|по|весом)\s+)?{SAMPLE_WEIGHT}")
+SAMPLE_ADDRESS_OFFER = re.compile(
+    r"^[^\w]*(?:(?:привет(?:ствую)?|здравствуй(?:те)?|добрый день)[^\w]+)?"
+    r"(?:есть|имеются|дам|даю|предоставлю)\s+(?:актуальн\w*\s+)?"
+    rf"адрес\w*\s+(?:на|для)\s+(?:пробу|пробы|пробник\w*)\s*{SAMPLE_WEIGHT}")
 FEATURES = {"private_contact", "contact_prompt", "payment_amount", "periodic_pay",
             "adjacent_periodic_pay", "direct_job_offer", "direct_sample_offer"}
 
@@ -58,11 +62,15 @@ def has_feature(text: str, name: str) -> bool:
         return bool(DIRECT_JOB_OFFER.search(text))
     if name == "direct_sample_offer":
         match = DIRECT_SAMPLE_OFFER.match(text)
+        address_match = SAMPLE_ADDRESS_OFFER.match(text) if not match else None
+        match = match or address_match
         if not match:
             return False
         tail = re.sub(r"^[^\w]+", "", text[match.end():])
         # A specified material (e.g. a lab sample) is not a generic sample ad.
-        return not tail or bool(CONTACT_ACTION.match(tail) and has_feature(tail, "private_contact"))
+        return (not tail or bool(CONTACT_ACTION.match(tail) and has_feature(tail, "private_contact"))
+                or bool(address_match and re.match(
+                    r"(?:предоставлю\s+с\s+удовольствием\s+)?запись\s+тут(?!\w)", tail)))
     raise ValueError(f"Unknown spam feature: {name}")
 # Compare visual lookalikes in the matcher only; never rewrite original messages.
 LOOKALIKES = str.maketrans({
@@ -124,7 +132,14 @@ def is_ukrainian_text(text: str) -> bool:
         return False
     hits = [word for word in words if word in UKRAINIAN_WORDS]
     # No ban for an isolated letter, surname, country or one repeated word.
-    return len(set(hits)) >= 2 and len(hits) / len(words) >= 0.5
+    if len(set(hits)) >= 2 and len(hits) / len(words) >= 0.5:
+        return True
+    # Unseen inflections can still carry strong language evidence. Require many
+    # different words, lexical support and substantial coverage, not one letter.
+    marked_words = {word for word in words if any(char in "іїєґ" for char in word)}
+    evidence_count = sum(word in UKRAINIAN_WORDS or word in marked_words for word in words)
+    return (len(marked_words) >= 5 and len(set(hits)) >= 3
+            and evidence_count / len(words) >= 0.4)
 
 
 @lru_cache(maxsize=1024)

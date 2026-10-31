@@ -11,7 +11,7 @@ from aiogram.types import Message
 
 from database import get_user, add_message, delete_user, add_warning, clear_warnings
 from moderation_content import inspect_content, has_untrusted_source
-from spam_patterns import find_pattern, find_spam_rule, load_spam_rules
+from spam_patterns import find_pattern, find_spam_rule, load_spam_rules, is_ukrainian_text
 
 logger = logging.getLogger(__name__)
 
@@ -211,6 +211,9 @@ async def filter_flood(message: Message, bot: Bot):
 
     return True
 
+KEYCAP_EMOJI = re.compile(r"[0-9#*]\ufe0f?\u20e3")
+
+
 def is_emoji_only(text: str) -> bool:
     if not text:
         return False
@@ -218,6 +221,7 @@ def is_emoji_only(text: str) -> bool:
     if len(text) < 6:
         return False
 
+    text = KEYCAP_EMOJI.sub("🔢", text)
     if any(c.isalpha() or c.isdigit() for c in text):
         return False
 
@@ -225,6 +229,31 @@ def is_emoji_only(text: str) -> bool:
     cleaned = text.translate(str.maketrans('', '', chars_to_remove))
 
     return bool(cleaned)
+
+
+def is_emoji_flood(text: str) -> bool:
+    if not is_emoji_only(text):
+        return False
+    # Count emoji bases; variation selectors and joiners must not inflate size.
+    return sum(0x1F000 <= ord(char) <= 0x1FAFF or 0x2600 <= ord(char) <= 0x27BF
+               for char in KEYCAP_EMOJI.sub("🔢", text)) >= 20
+
+
+def content_texts(message: Message, text: str) -> tuple[str, ...]:
+    # Also check a supplied quote on its own: a reply heading must not hide an
+    # anchored advertisement or turn a quote made only of emoji into plain text.
+    quote = message.quote.text if message.quote else ""
+    return tuple(dict.fromkeys(part for part in (text, quote) if part))
+
+
+def find_posting_policy(texts: tuple[str, ...], patterns: list) -> str | None:
+    for text in texts:
+        if is_ukrainian_text(text):
+            return "language:uk"
+        pattern = find_pattern(text, patterns)
+        if pattern:
+            return pattern
+    return None
 
 # ---------- Предупреждение и бан новичков ----------
 async def give_warning(bot: Bot, message: Message, target_chat_id: int, reason: str) -> bool:
@@ -272,9 +301,11 @@ async def filter_new_user(message: Message, bot: Bot, target_chat_id: int, hard_
 
     content = inspect_content(message)
     text = content.text
+    texts = content_texts(message, text)
 
     # Жёсткие паттерны → бан
-    pattern = find_pattern(text, hard_patterns)
+    # The posting-language policy also applies with older pattern files.
+    pattern = find_posting_policy(texts, hard_patterns)
     if pattern:
         await message.delete()
         try:
@@ -287,14 +318,14 @@ async def filter_new_user(message: Message, bot: Bot, target_chat_id: int, hard_
         return False
 
     # Сочетания признаков рекламы → предупреждение вместо бана по одному слову.
-    rule = find_spam_rule(text, spam_rules)
+    rule = next((rule for part in texts if (rule := find_spam_rule(part, spam_rules))), None)
     if rule:
         await message.delete()
         logger.info("Удалена реклама от %s по правилу %s", message.from_user.full_name, rule)
         return await give_warning(bot, message, target_chat_id, "рекламные предложения запрещены")
 
     # Эмодзи → удаление и предупреждение, бан только за повторные нарушения.
-    if text and is_emoji_only(text):
+    if any(is_emoji_only(part) for part in texts):
         await message.delete()
         return await give_warning(bot, message, target_chat_id, "сообщения только из эмодзи запрещены")
 
@@ -334,7 +365,10 @@ async def filter_soft_spam(message: Message, bot: Bot, soft_patterns: list, spam
     if not text:
         return True
 
-    reason = find_pattern(text, soft_patterns) or find_spam_rule(text, spam_rules)
+    texts = content_texts(message, text)
+    reason = find_posting_policy(texts, soft_patterns)
+    reason = reason or next((rule for part in texts if (rule := find_spam_rule(part, spam_rules))), None)
+    reason = reason or ("emoji_flood" if any(is_emoji_flood(part) for part in texts) else None)
     if reason:
         await message.delete()
         logger.info("Удалено сообщение от %s по спам-правилу '%s'", message.from_user.full_name, reason)
