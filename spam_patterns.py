@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Extra conditions are deliberately combined with textual groups, never used alone.
 CONTACT_ACTION = re.compile(
-    r"(?<!\w)(?:(?:на)?пиш(?:и|ите|ете|ить)(?!\w)|(?:на)?печат(?:ай|айте)(?!\w)|писать(?!\w)|писати(?!\w)|отправ\w*|присыл\w*|став\w*|"
+    r"(?<!\w)(?:(?:на|от)?пиш(?:и|ите|ете|ить)(?!\w)|(?:на)?печат(?:ай|айте)(?!\w)|писать(?!\w)|писати(?!\w)|отправ\w*|присыл\w*|став\w*|"
     r"жд\w*|жду|обращ\w*|приглаша\w*|подробност\w*|детал\w*|расскаж\w*|объясн\w*)")
 PRIVATE_DESTINATION = re.compile(
     r"(?<!\w)(?:л[\s.]*с\.?|(?:в|у)\s+(?:личн\w*|личк\w*|приват\w*|особист\w*|со?общени\w*|пп))(?!\w)|@\w{4,}")
@@ -28,6 +28,8 @@ ADJACENT_PERIODIC_PAY = re.compile(
     rf"(?:{PAY_AMOUNT}\s*{PAY_PERIOD}(?!\w)|"
     rf"{PAY_PERIOD}(?!\w)\s*[:—–-]?\s*(?:(?:от|до)\s+)?{PAY_AMOUNT})")
 PAYMENT_AMOUNT = re.compile(PAY_AMOUNT)
+SHORT_WORK_DURATION = re.compile(
+    r"(?<!\w)работ[ауы]\s+(?:на\s+)?(?:[1-3](?:\s*[-–—]\s*[1-3])?\s+час(?:а|ов)?|пару\s+часов)(?!\w)")
 # Only a direct offer at the start, not a question or a report about an ad.
 DIRECT_JOB_OFFER = re.compile(
     r"^[^\w]*(?:(?:я|мы)\s+)?(?:дам|дадим|даю|даем|предлагаю|предлагаем)\s+"
@@ -43,7 +45,8 @@ SAMPLE_ADDRESS_OFFER = re.compile(
     r"(?:есть|имеются|дам|даю|предоставлю)\s+(?:актуальн\w*\s+)?"
     rf"адрес\w*\s+(?:на|для)\s+(?:пробу|пробы|пробник\w*)\s*{SAMPLE_WEIGHT}")
 FEATURES = {"private_contact", "contact_prompt", "payment_amount", "periodic_pay",
-            "adjacent_periodic_pay", "direct_job_offer", "direct_sample_offer"}
+            "adjacent_periodic_pay", "direct_job_offer", "direct_sample_offer",
+            "offer_amount_before_help", "short_work_duration"}
 
 
 def has_feature(text: str, name: str) -> bool:
@@ -56,6 +59,12 @@ def has_feature(text: str, name: str) -> bool:
         return bool(CONTACT_ACTION.search(text))
     if name == "payment_amount":
         return bool(PAYMENT_AMOUNT.search(text))
+    if name == "offer_amount_before_help":
+        offer = compile_pattern("подкин*").pattern
+        reason = compile_pattern("за помощь").pattern
+        return bool(re.search(rf"{offer}\s+(?:(?:от|до)\s+)?{PAY_AMOUNT}\s+{reason}", text))
+    if name == "short_work_duration":
+        return bool(SHORT_WORK_DURATION.search(text))
     if name == "adjacent_periodic_pay":
         return bool(ADJACENT_PERIODIC_PAY.search(text))
     if name == "direct_job_offer":
