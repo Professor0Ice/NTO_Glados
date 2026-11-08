@@ -1,7 +1,11 @@
 import logging
 import re
+import ast
+import math
+import operator
 from datetime import datetime, timedelta
 from collections import defaultdict
+from fractions import Fraction
 import asyncio
 import string
 import os
@@ -22,6 +26,16 @@ TEAM_SEARCH_THREAD_ID = 209088
 #Для темы счёта
 DATA_DIR = os.getenv("DATA_DIR", "./")
 COUNTER_FILE = os.path.join(DATA_DIR, "counter_state.txt")
+COUNTER_FORMULA_MAX_LENGTH = 200
+COUNTER_POWER_LIMIT = 100
+COUNTER_VALUE_BITS = 1024
+COUNTER_BINARY_OPERATORS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+}
+EXACT_SINES = {0: 0, 30: Fraction(1, 2), 90: 1, 150: Fraction(1, 2), 180: 0}
 
 def load_counter_state():
     try:
@@ -39,6 +53,68 @@ def save_counter_state(number, user_id):
     os.makedirs(os.path.dirname(COUNTER_FILE), exist_ok=True)
     with open(COUNTER_FILE, "w", encoding="utf-8") as f:
         f.write(f"{number}\n{user_id}")
+
+
+def parse_counter_number(text: str) -> int | None:
+    if text.isdecimal():
+        return int(text)
+    if len(text) > COUNTER_FORMULA_MAX_LENGTH or "**" in text:
+        return None
+    if not re.fullmatch(r"(?:[0-9.()+*/^ \t-]|sin|cos)+", text):
+        return None
+
+    source = text.replace("^", "**")
+    approximate = False
+
+    def calculate(node: ast.AST) -> Fraction:
+        nonlocal approximate
+        if isinstance(node, ast.Constant) and type(node.value) in (int, float):
+            return Fraction(ast.get_source_segment(source, node))
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+            value = calculate(node.operand)
+            return -value if isinstance(node.op, ast.USub) else value
+        if isinstance(node, ast.BinOp):
+            left = calculate(node.left)
+            right = calculate(node.right)
+            if isinstance(node.op, ast.Pow):
+                if abs(right) > COUNTER_POWER_LIMIT:
+                    raise ValueError("Exponent is too large")
+                if right.denominator == 1:
+                    value = left ** right.numerator
+                else:
+                    approximate = True
+                    value = Fraction(math.pow(left, right))
+            else:
+                operation = COUNTER_BINARY_OPERATORS.get(type(node.op))
+                if operation is None:
+                    raise ValueError("Unsupported operator")
+                value = operation(left, right)
+            if max(value.numerator.bit_length(), value.denominator.bit_length()) > COUNTER_VALUE_BITS:
+                raise ValueError("Intermediate result is too large")
+            return value
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                and node.func.id in ("sin", "cos") and len(node.args) == 1 and not node.keywords):
+            angle = calculate(node.args[0])
+            if node.func.id == "cos":
+                angle += 90
+            angle = (angle + 180) % 360 - 180
+            exact = EXACT_SINES.get(abs(angle))
+            if exact is not None:
+                return Fraction(-exact if angle < 0 else exact)
+            approximate = True
+            return Fraction(math.sin(math.radians(angle)))
+        raise ValueError("Unsupported expression")
+
+    try:
+        value = calculate(ast.parse(source, mode="eval").body)
+    except (ArithmeticError, SyntaxError, ValueError):
+        return None
+    magnitude = abs(value)
+    if approximate:
+        # Compensate for floating-point error at the half-integer rounding boundary.
+        magnitude += Fraction(1, 10**12)
+    rounded = math.floor(magnitude + Fraction(1, 2))
+    return -rounded if value < 0 else rounded
 
 # ---------- Настройки антифлуда ----------
 FLOOD_MAX_COUNT = 3
@@ -378,35 +454,20 @@ async def filter_soft_spam(message: Message, bot: Bot, soft_patterns: list, spam
 async def handle_counter_message(message: Message, bot: Bot, target_chat_id: int):
     global last_counter_number, last_counter_user
 
-    if await is_admin(bot, target_chat_id, message.from_user.id):
-        text = (message.text or message.caption or "").strip()
-        if text.isdigit():
-            num = int(text)
-            if num == last_counter_number + 1 and message.from_user.id != last_counter_user:
-                last_counter_number = num
-                last_counter_user = message.from_user.id
-                save_counter_state(last_counter_number, last_counter_user)
-                logger.info(f"Счётчик: {num} от {message.from_user.full_name} (админ)")
-        return
-
+    user_id = message.from_user.id
+    admin = await is_admin(bot, target_chat_id, user_id)
     text = (message.text or message.caption or "").strip()
-    if not text.isdigit():
-        await message.delete()
+    number = parse_counter_number(text)
+    if number != last_counter_number + 1 or user_id == last_counter_user:
+        if not admin:
+            await message.delete()
         return
 
-    num = int(text)
-    if num != last_counter_number + 1:
-        await message.delete()
-        return
-
-    if message.from_user.id == last_counter_user:
-        await message.delete()
-        return
-
-    last_counter_number = num
-    last_counter_user = message.from_user.id
-    save_counter_state(last_counter_number, last_counter_user)
-    logger.info(f"Счётчик: {num} от {message.from_user.full_name}")
+    save_counter_state(number, user_id)
+    last_counter_number = number
+    last_counter_user = user_id
+    suffix = " (админ)" if admin else ""
+    logger.info("Счётчик: %s от %s%s", number, message.from_user.full_name, suffix)
 
 # ---------- Главный обработчик (всё в одном) ----------
 def setup_chat_reader(bot: Bot, target_chat_id: int, bot_config: dict = None,
