@@ -28,6 +28,8 @@ ADJACENT_PERIODIC_PAY = re.compile(
     rf"(?:{PAY_AMOUNT}\s*{PAY_PERIOD}(?!\w)|"
     rf"{PAY_PERIOD}(?!\w)\s*[:—–-]?\s*(?:(?:от|до)\s+)?{PAY_AMOUNT})")
 PAYMENT_AMOUNT = re.compile(PAY_AMOUNT)
+PAYMENT_COMMITMENT = re.compile(
+    r"(?<!\w)(?<!не )(?:готова?\s+(?:заплатить|оплатить)|заплачу\s+за\s+монтаж)(?!\w)")
 SHORT_WORK_DURATION = re.compile(
     r"(?<!\w)работ[ауы]\s+(?:на\s+)?(?:[1-3](?:\s*[-–—]\s*[1-3])?\s+час(?:а|ов)?|пару\s+часов)(?!\w)")
 # Only a direct offer at the start, not a question or a report about an ad.
@@ -46,7 +48,7 @@ SAMPLE_ADDRESS_OFFER = re.compile(
     rf"адрес\w*\s+(?:на|для)\s+(?:пробу|пробы|пробник\w*)\s*{SAMPLE_WEIGHT}")
 FEATURES = {"private_contact", "contact_prompt", "payment_amount", "periodic_pay",
             "adjacent_periodic_pay", "direct_job_offer", "direct_sample_offer",
-            "offer_amount_before_help", "short_work_duration"}
+            "offer_amount_before_help", "short_work_duration", "payment_commitment"}
 
 
 def has_feature(text: str, name: str) -> bool:
@@ -59,10 +61,12 @@ def has_feature(text: str, name: str) -> bool:
         return bool(CONTACT_ACTION.search(text))
     if name == "payment_amount":
         return bool(PAYMENT_AMOUNT.search(text))
+    if name == "payment_commitment":
+        return bool(PAYMENT_COMMITMENT.search(text))
     if name == "offer_amount_before_help":
         offer = compile_pattern("подкин*").pattern
         reason = compile_pattern("за помощь").pattern
-        return bool(re.search(rf"{offer}\s+(?:(?:от|до)\s+)?{PAY_AMOUNT}\s+{reason}", text))
+        return bool(re.search(rf"{offer}\s+(?:(?:от|до)\s+){{0,2}}{PAY_AMOUNT}\s+{reason}", text))
     if name == "short_work_duration":
         return bool(SHORT_WORK_DURATION.search(text))
     if name == "adjacent_periodic_pay":

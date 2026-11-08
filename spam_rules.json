@@ -501,6 +501,14 @@
     "features": ["private_contact"]
   },
   {
+    "name": "small_paid_video_editing_task",
+    "all": [
+      ["кто умеет монтировать видео", "ищу монтажер*", "нужен монтажер*"],
+      ["небольш* задач*", "маленьк* задач*", "прост* задач*"]
+    ],
+    "features": ["payment_commitment"]
+  },
+  {
     "name": "loan_advertisement_with_contact",
     "all": [
       [
