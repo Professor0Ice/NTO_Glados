@@ -488,6 +488,19 @@
     "features": ["offer_amount_before_help", "private_contact"]
   },
   {
+    "name": "part_time_work_with_payment_offer",
+    "all": [["есть подработ*", "предлага* подработ*"]],
+    "features": ["explicit_payment_offer", "private_contact"]
+  },
+  {
+    "name": "bybit_job_with_daily_euro_pay",
+    "all": [
+      ["работа на bybit", "работа в bybit", "ваканси* на bybit", "ваканси* в bybit", "подработ* на bybit"],
+      ["пиши", "пишите", "напиши", "напишите"]
+    ],
+    "features": ["euro_daily_pay"]
+  },
+  {
     "name": "short_paid_work_with_contact",
     "all": [
       ["нужна помощь", "ищу помощник*", "нужен помощник*"],

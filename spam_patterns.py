@@ -18,8 +18,12 @@ PRIVATE_DESTINATION = re.compile(
     r"(?<!\w)(?:л[\s.]*с\.?|(?:в|у)\s+(?:личн\w*|личк\w*|приват\w*|особист\w*|со?общени\w*|пп))(?!\w)|@\w{4,}")
 RESPONSE_PROMPT = re.compile(r"(?<!\w)(?:на)?пиш\w*.{0,35}(?:плюс|\+|старт)")
 # Attached digits 0/6 become о/б during normalization; retain their numeric role.
-PAY_AMOUNT = (r"(?<!\w)[\dб][\dоб]*(?:[\s.,–—-]+[\dб][\dоб]*)*\s*"
-              r"(?:тыс\w*\.?\s*)?(?:к(?!\w)|р(?!\w)|руб\w*|дол\w*|us[dд]|eur|зелен\w*|грн(?!\w)|грив\w*)")
+PAY_NUMBER = r"[\dб][\dоб]*(?:[\s.,–—-]+[\dб][\dоб]*)*"
+PAY_VALUE = (rf"{PAY_NUMBER}\s*"
+             r"(?:тыс\w*\.?\s*)?(?:к(?!\w)|р(?!\w)|руб\w*|дол\w*|us[dд]|eur|зелен\w*|грн(?!\w)|грив\w*)")
+PAY_AMOUNT = rf"(?<!\w){PAY_VALUE}"
+# normalize_text maps the Latin e in EUR to Cyrillic е.
+EURO_DAILY_PAY = re.compile(rf"(?<!\w){PAY_NUMBER}\s*(?:€|еur|евро)\s*(?:/\s*|(?:в|за)\s+)день(?!\w)")
 PAY_PERIOD = (r"(?<!\w)(?:в|за|кажд\w*|/)?\s*"
               r"(?:день|дн[яе]\w*|сутк\w*|недел\w*|месяц\w*|смен\w*|час\w*|ежеднев\w*|еженедел\w*)")
 PERIODIC_PAY = re.compile(rf"(?:{PAY_AMOUNT}.{{0,35}}?{PAY_PERIOD}|{PAY_PERIOD}.{{0,35}}?{PAY_AMOUNT})")
@@ -48,7 +52,8 @@ SAMPLE_ADDRESS_OFFER = re.compile(
     rf"адрес\w*\s+(?:на|для)\s+(?:пробу|пробы|пробник\w*)\s*{SAMPLE_WEIGHT}")
 FEATURES = {"private_contact", "contact_prompt", "payment_amount", "periodic_pay",
             "adjacent_periodic_pay", "direct_job_offer", "direct_sample_offer",
-            "offer_amount_before_help", "short_work_duration", "payment_commitment"}
+            "offer_amount_before_help", "short_work_duration", "payment_commitment",
+            "explicit_payment_offer", "euro_daily_pay"}
 
 
 def has_feature(text: str, name: str) -> bool:
@@ -63,10 +68,11 @@ def has_feature(text: str, name: str) -> bool:
         return bool(PAYMENT_AMOUNT.search(text))
     if name == "payment_commitment":
         return bool(PAYMENT_COMMITMENT.search(text))
-    if name == "offer_amount_before_help":
-        offer = compile_pattern("подкин*").pattern
-        reason = compile_pattern("за помощь").pattern
-        return bool(re.search(rf"{offer}\s+(?:(?:от|до)\s+){{0,2}}{PAY_AMOUNT}\s+{reason}", text))
+    if name in {"offer_amount_before_help", "explicit_payment_offer"}:
+        offer, offer_for_help = compile_payment_offers()
+        return bool((offer_for_help if name == "offer_amount_before_help" else offer).search(text))
+    if name == "euro_daily_pay":
+        return bool(EURO_DAILY_PAY.search(text))
     if name == "short_work_duration":
         return bool(SHORT_WORK_DURATION.search(text))
     if name == "adjacent_periodic_pay":
@@ -175,6 +181,18 @@ def compile_pattern(pattern: str) -> re.Pattern:
     if normalized[-1].isalnum() or normalized.endswith("*"):
         expression += r"(?!\w)"
     return re.compile(expression)
+
+
+@lru_cache(maxsize=1)
+def compile_payment_offers() -> tuple[re.Pattern, re.Pattern]:
+    verbs = "|".join(compile_pattern(word).pattern for word in
+                     ("подкину", "подкинем", "подкин*", "закину", "закинем",
+                      "заплачу", "заплатим", "выплачу", "выплатим"))
+    # Allow glued qualifiers only next to a payment verb, not in arbitrary words.
+    amount = rf"(?:(?:от|до)\s+)?(?:(?:от|до)\s*)?{PAY_VALUE}"
+    offer = rf"(?<!не )(?:{verbs})\s+{amount}"
+    reason = compile_pattern("за помощь").pattern
+    return re.compile(offer), re.compile(rf"(?:{offer}\s+{reason}|{reason}\s+{offer})")
 
 
 def find_pattern(text: str, patterns) -> str | None:
