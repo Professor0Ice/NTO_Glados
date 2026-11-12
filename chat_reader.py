@@ -36,6 +36,27 @@ COUNTER_BINARY_OPERATORS = {
     ast.Div: operator.truediv,
 }
 EXACT_SINES = {0: 0, 30: Fraction(1, 2), 90: 1, 150: Fraction(1, 2), 180: 0}
+COUNTER_NUMBER_WORDS = {
+    "один": 1, "одна": 1, "два": 2, "две": 2, "три": 3, "четыре": 4,
+    "пять": 5, "шесть": 6, "семь": 7, "восемь": 8, "девять": 9,
+    "десять": 10, "одиннадцать": 11, "двенадцать": 12, "тринадцать": 13,
+    "четырнадцать": 14, "пятнадцать": 15, "шестнадцать": 16, "семнадцать": 17,
+    "восемнадцать": 18, "девятнадцать": 19, "двадцать": 20, "тридцать": 30,
+    "сорок": 40, "пятьдесят": 50, "шестьдесят": 60, "семьдесят": 70,
+    "восемьдесят": 80, "девяносто": 90, "сто": 100, "двести": 200,
+    "триста": 300, "четыреста": 400, "пятьсот": 500, "шестьсот": 600,
+    "семьсот": 700, "восемьсот": 800, "девятьсот": 900,
+}
+COUNTER_SCALE_FORMS = {
+    word: (scale, form)
+    for scale, forms in (
+        (1_000, ("тысяча", "тысячи", "тысяч")),
+        (1_000_000, ("миллион", "миллиона", "миллионов")),
+        (1_000_000_000, ("миллиард", "миллиарда", "миллиардов")),
+        (1_000_000_000_000, ("триллион", "триллиона", "триллионов")),
+    )
+    for form, word in enumerate(forms)
+}
 
 def load_counter_state():
     try:
@@ -55,9 +76,62 @@ def save_counter_state(number, user_id):
         f.write(f"{number}\n{user_id}")
 
 
+def parse_russian_counter_number(text: str) -> int | None:
+    words = text.casefold().split()
+    if words in (["ноль"], ["нуль"]):
+        return 0
+
+    total = group = 0
+    previous_scale = math.inf
+    component_limit = 1000
+    for word in words:
+        value = COUNTER_NUMBER_WORDS.get(word)
+        if value is not None:
+            if value >= component_limit:
+                return None
+            group += value
+            # A group contains hundreds, then tens and units or a single teen.
+            if value >= 100:
+                component_limit = 100
+            elif value >= 20:
+                component_limit = 10
+            else:
+                component_limit = 1
+            continue
+
+        scale_form = COUNTER_SCALE_FORMS.get(word)
+        if scale_form is None:
+            return None
+        scale, form = scale_form
+        if scale >= previous_scale:
+            return None
+        group = group or 1
+        ones = group % 10
+        if 11 <= group % 100 <= 14:
+            expected_form = 2
+        elif ones == 1:
+            expected_form = 0
+        elif 2 <= ones <= 4:
+            expected_form = 1
+        else:
+            expected_form = 2
+        if form != expected_form:
+            return None
+        total += group * scale
+        previous_scale = scale
+        group = 0
+        component_limit = 1000
+
+    return (total + group) or None
+
+
 def parse_counter_number(text: str) -> int | None:
     if text.isdecimal():
         return int(text)
+    if re.fullmatch(r"0b[01]+", text):
+        return int(text, 2)
+    if re.fullmatch(r"[а-яА-ЯёЁ\s]+", text):
+        return parse_russian_counter_number(text)
     if len(text) > COUNTER_FORMULA_MAX_LENGTH or "**" in text:
         return None
     if not re.fullmatch(r"(?:[0-9.()+*/^ \t-]|sin|cos)+", text):
