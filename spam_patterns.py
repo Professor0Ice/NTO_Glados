@@ -32,6 +32,20 @@ ADJACENT_PERIODIC_PAY = re.compile(
     rf"(?:{PAY_AMOUNT}\s*{PAY_PERIOD}(?!\w)|"
     rf"{PAY_PERIOD}(?!\w)\s*[:—–-]?\s*(?:(?:от|до)\s+)?{PAY_AMOUNT})")
 PAYMENT_AMOUNT = re.compile(PAY_AMOUNT)
+# Short job ads often omit the currency; accept bare amounts only in a pay phrase.
+BARE_CASH = r"[0-9]{1,3}(?: [0-9]{3})+|[0-9]{3,7}"
+TASK_AMOUNT = rf"(?:{PAY_VALUE}|(?:{BARE_CASH})(?![\w.,:%]|\s*(?:бал|очк|шаг|кадр)\w*))"
+TASK_PAYMENT = re.compile(
+    rf"(?<!\w)(?<!не )(?:плачу|заплачу|выплачу|оплата)\s*[:—–-]?\s*(?:(?:от|до)\s*)?{TASK_AMOUNT}"
+    rf"|(?<![\w.,:]){TASK_AMOUNT}\s+(?:(?:плачу|заплачу|выплачу)(?!\w)|в конце(?!\w))"
+    r"|(?<!\w)(?<!не )(?:(?:заплачу|выплачу)(?=\s*(?:[.!;,]|$))"
+    r"|(?:оплачу|заплачу за)\s+(?:эту\s+)?(?:работу|задачу)(?!\w))")
+DAILY_CASH = re.compile(rf"(?<![\w.,:]){TASK_AMOUNT}\s+(?:в|за)\s+день(?!\w)")
+CASH_LOAN = re.compile(rf"(?<!\w)(?<!не )дам\s+в\s+долг\s+(?:(?:от|до)\s*)?{TASK_AMOUNT}")
+UNDERAGE_OFFER = re.compile(
+    r"^[^\w]*(?:переспать|секс)\s+с\s+[^|]{1,100}?"
+    r"(?<!\w)(?:(?:от|с|до)\s+(?:[1-9]|1[0-7])|(?:[1-9]|1[0-7])\s*[-–—]\s*(?:1[0-9]|2[0-9]))"
+    r"\s+(?:лет|года|год)(?!\w)")
 PAYMENT_COMMITMENT = re.compile(
     r"(?<!\w)(?<!не )(?:готова?\s+(?:заплатить|оплатить)|заплачу\s+за\s+монтаж)(?!\w)")
 SHORT_WORK_DURATION = re.compile(
@@ -53,7 +67,8 @@ SAMPLE_ADDRESS_OFFER = re.compile(
 FEATURES = {"private_contact", "contact_prompt", "payment_amount", "periodic_pay",
             "adjacent_periodic_pay", "direct_job_offer", "direct_sample_offer",
             "offer_amount_before_help", "short_work_duration", "payment_commitment",
-            "explicit_payment_offer", "euro_daily_pay"}
+            "explicit_payment_offer", "euro_daily_pay", "task_payment", "daily_cash",
+            "cash_loan_offer", "underage_offer"}
 
 
 def has_feature(text: str, name: str) -> bool:
@@ -73,6 +88,14 @@ def has_feature(text: str, name: str) -> bool:
         return bool((offer_for_help if name == "offer_amount_before_help" else offer).search(text))
     if name == "euro_daily_pay":
         return bool(EURO_DAILY_PAY.search(text))
+    if name == "task_payment":
+        return bool(TASK_PAYMENT.search(text))
+    if name == "daily_cash":
+        return bool(DAILY_CASH.search(text))
+    if name == "cash_loan_offer":
+        return bool(CASH_LOAN.search(text))
+    if name == "underage_offer":
+        return bool(UNDERAGE_OFFER.search(text))
     if name == "short_work_duration":
         return bool(SHORT_WORK_DURATION.search(text))
     if name == "adjacent_periodic_pay":
@@ -211,6 +234,7 @@ class SpamRule:
     name: str
     groups: tuple[tuple[str, ...], ...]
     features: tuple[str, ...] = ()
+    ban_newcomer: bool = False
 
 
 def load_spam_rules(path="spam_rules.json") -> list[SpamRule]:
@@ -229,8 +253,11 @@ def load_spam_rules(path="spam_rules.json") -> list[SpamRule]:
             raise ValueError(f"{path}: each rule must be an object")
         name, groups = entry.get("name"), entry.get("all")
         features = entry.get("features", [])
+        ban_newcomer = entry.get("ban_newcomer", False)
         if not isinstance(name, str) or not name or name in names:
             raise ValueError(f"{path}: rule names must be unique, non-empty strings")
+        if not isinstance(ban_newcomer, bool):
+            raise ValueError(f"{path}: {name}: ban_newcomer must be a boolean")
         if (not isinstance(features, list) or not all(isinstance(item, str) and item in FEATURES for item in features)
                 or len(set(features)) != len(features)):
             raise ValueError(f"{path}: {name}: invalid or duplicate feature")
@@ -243,16 +270,22 @@ def load_spam_rules(path="spam_rules.json") -> list[SpamRule]:
                 if not isinstance(pattern, str):
                     raise ValueError(f"{path}: {name}: patterns must be strings")
                 compile_pattern(pattern)
-        rules.append(SpamRule(name, tuple(tuple(group) for group in groups), tuple(features)))
+        rules.append(SpamRule(name, tuple(tuple(group) for group in groups), tuple(features), ban_newcomer))
         names.add(name)
     logger.info("Загружено %s составных правил антиспама из %s", len(rules), path)
     return rules
 
 
-def find_spam_rule(text: str, rules) -> str | None:
-    normalized = normalize_text(text)
+def find_spam_rule(text: str, rules, *, ban_newcomer_only: bool = False) -> str | None:
+    # A list of alternatives must not combine clues from unrelated entries.
+    # A single pipe in a regular post can simply separate its heading and body.
+    parts = text.split("|") if text.count("|") >= 2 or text.lstrip().startswith("{") else (text,)
+    segments = tuple(filter(None, map(normalize_text, parts)))
     for rule in rules:
-        if all(any(compile_pattern(pattern).search(normalized) for pattern in group)
-               for group in rule.groups) and all(has_feature(normalized, name) for name in rule.features):
+        if ban_newcomer_only and not rule.ban_newcomer:
+            continue
+        if any(all(any(compile_pattern(pattern).search(segment) for pattern in group)
+                   for group in rule.groups) and all(has_feature(segment, name) for name in rule.features)
+               for segment in segments):
             return rule.name
     return None

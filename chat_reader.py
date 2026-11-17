@@ -456,6 +456,9 @@ async def filter_new_user(message: Message, bot: Bot, target_chat_id: int, hard_
     # Жёсткие паттерны → бан
     # The posting-language policy also applies with older pattern files.
     pattern = find_posting_policy(texts, hard_patterns)
+    if not pattern:
+        pattern = next((rule for part in texts if (rule := find_spam_rule(
+            part, spam_rules, ban_newcomer_only=True))), None)
     if pattern:
         await message.delete()
         try:
